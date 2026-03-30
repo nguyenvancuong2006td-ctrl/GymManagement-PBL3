@@ -6,7 +6,7 @@ import java.util.Objects;
 public class Account {
     private int accountID;
     private String username;
-    private String passwordHash;
+    private String password;
     private String role;
     private LocalDate createDate;
     private String status;
@@ -15,7 +15,7 @@ public class Account {
 
     public Account(String username, String passwordHash, String role) {
         this.username = username;
-        this.passwordHash = passwordHash;
+        this.password = passwordHash;
         this.role = role;
     }
 
@@ -23,7 +23,7 @@ public class Account {
                    String role, LocalDate createDate, String status) {
         this.accountID = accountID;
         this.username = username;
-        this.passwordHash = passwordHash;
+        this.password = passwordHash;
         this.role = role;
         this.createDate = createDate;
         this.status = status;
@@ -35,8 +35,8 @@ public class Account {
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
 
-    public String getPasswordHash() { return passwordHash; }
-    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public String getPassword() { return password; }
+    public void setPassword(String passwordHash) { this.password = passwordHash; }
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
