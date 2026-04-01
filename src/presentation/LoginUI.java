@@ -129,8 +129,24 @@ public class LoginUI extends JFrame {
         String username = txtUsername.getText().trim();
         String password = new String(txtPassword.getPassword()).trim();
 
+        if (username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ!");
+            return;
+        }
+
         try {
             Account acc = accountBUS.login(username, password);
+
+            if (acc == null) {
+                JOptionPane.showMessageDialog(this, "Sai tài khoản hoặc mật khẩu!");
+                return;
+            }
+
+            // check trạng thái account
+            if (!acc.getStatus().equalsIgnoreCase("Active")) {
+                JOptionPane.showMessageDialog(this, "Tài khoản đã bị khóa!");
+                return;
+            }
 
             JOptionPane.showMessageDialog(
                     this,
@@ -139,9 +155,10 @@ public class LoginUI extends JFrame {
                     JOptionPane.INFORMATION_MESSAGE
             );
 
-//            MainFrame mainFrame = new MainFrame(acc);
-//            mainFrame.setVisible(true);
-//            dispose();
+            //  MỞ DASHBOARD + TRUYỀN ACCOUNT
+           MainFrame dashboard = new MainFrame(acc);
+            dashboard.setVisible(true);
+            this.dispose();
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(
@@ -150,8 +167,6 @@ public class LoginUI extends JFrame {
                     "Login Failed",
                     JOptionPane.ERROR_MESSAGE
             );
-            txtPassword.setText("");
-            txtPassword.requestFocus();
         }
     }
 

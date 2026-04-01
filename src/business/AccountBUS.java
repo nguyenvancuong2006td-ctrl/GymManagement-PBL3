@@ -3,135 +3,71 @@ package business;
 import data.AccountDAO;
 import model.Account;
 
-import java.sql.SQLException;
-import java.util.List;
-
 public class AccountBUS {
 
     private final AccountDAO dao = new AccountDAO();
 
-    private static final String ACTIVE = "ACTIVE";
-    private static final String INACTIVE = "INACTIVE";
+    /* ================= STAFF FLOW ================= */
 
-    private static final String ADMIN = "ADMIN";
-    private static final String STAFF = "STAFF";
-
-    // ================== GET ==================
-    public List<Account> getAllAccounts() throws SQLException {
-        return dao.getAll();
-    }
-
-    public Account getAccountById(int id) throws SQLException {
-        if (id <= 0) return null;
-        return dao.getById(id);
-    }
-
-    public Account getByUsername(String username) throws SQLException {
-        if (username == null || username.isBlank()) return null;
-        return dao.getByUsername(username.trim().toLowerCase());
-    }
-
-    // ================== ADD ==================
-    public boolean addAccount(Account acc) throws SQLException {
-
-        if (acc == null) return false;
-
-        normalize(acc);
-
-        if (!validateForAdd(acc)) return false;
+    // Tạo account cho STAFF (bắt buộc trả ID)
+    public int createStaffAccount(Account acc) throws Exception {
 
         if (dao.getByUsername(acc.getUsername()) != null)
-            throw new RuntimeException("Username đã tồn tại");
+            throw new Exception("Username already exists");
 
-        acc.setStatus(ACTIVE);
+        acc.setStatus("Active");
+        return dao.insertAndReturnID(acc);
+    }
+
+    /* ================= ADMIN FLOW ================= */
+
+    public boolean createAdminAccount(Account acc) throws Exception {
+
+        if (!"Admin".equalsIgnoreCase(acc.getRole()))
+            throw new Exception("Only Admin role allowed");
+
+        if (dao.getByUsername(acc.getUsername()) != null)
+            throw new Exception("Username already exists");
+
+        acc.setStatus("Active");
         return dao.insert(acc);
     }
 
-    // ================== UPDATE ==================
-    public boolean updateAccount(Account acc) throws SQLException {
+    /* ================= UPDATE ================= */
 
-        if (acc == null || acc.getAccountID() <= 0) return false;
+    public boolean updateAccount(Account acc) throws Exception {
 
         Account old = dao.getById(acc.getAccountID());
-        if (old == null) return false;
+        if (old == null)
+            throw new Exception("Account not found");
 
-        normalize(acc);
-
-        Account existing = dao.getByUsername(acc.getUsername());
-        if (existing != null && existing.getAccountID() != acc.getAccountID())
-            throw new RuntimeException("Username đã tồn tại");
-
-        // nếu không nhập password mới → giữ password cũ
-        if (acc.getPassword() == null || acc.getPassword().isBlank()) {
-            acc.setPassword(old.getPassword());
-        }
+        // Không cho đổi role account Staff
+        if (!old.getRole().equals(acc.getRole()) && dao.isLinkedToStaff(acc.getAccountID()))
+            throw new Exception("Cannot change role of Staff account");
 
         return dao.update(acc);
     }
 
-    // ================== DELETE / DEACTIVATE ==================
-    public boolean deleteAccount(int id) throws SQLException {
-        Account acc = dao.getById(id);
-        if (acc == null) return false;
+    /* ================= DELETE ================= */
 
-        acc.setStatus(INACTIVE);
-        return dao.update(acc);
+    public boolean deleteAccount(int accountID) throws Exception {
+
+        if (dao.isLinkedToStaff(accountID))
+            throw new Exception("Cannot delete account linked to Staff");
+
+        return dao.delete(accountID);
     }
 
-    // ================== LOGIN ==================
-    public Account login(String username, String password) throws SQLException {
+    /* ================= AUTH ================= */
 
-        if (username == null || username.isBlank())
-            throw new RuntimeException("Vui lòng nhập username");
-
-        if (password == null || password.isBlank())
-            throw new RuntimeException("Vui lòng nhập mật khẩu");
-
-        username = username.trim().toLowerCase();
-        password = password.trim();
+    public Account login(String username, String password) throws Exception {
 
         Account acc = dao.getByUsername(username);
-        if (acc == null)
-            throw new RuntimeException("Tài khoản không tồn tại");
+        if (acc == null) return null;
 
-        // SO SÁNH PASSWORD
-        if (!password.equals(acc.getPassword()))
-            throw new RuntimeException("Sai mật khẩu");
-
-        if (!ACTIVE.equals(acc.getStatus()))
-            throw new RuntimeException("Tài khoản đã bị khóa");
+        if (!acc.getPassword().equals(password)) return null;
+        if (!"Active".equals(acc.getStatus())) return null;
 
         return acc;
-    }
-
-    // ================== NORMALIZE ==================
-    private void normalize(Account acc) {
-
-        if (acc.getUsername() != null)
-            acc.setUsername(acc.getUsername().trim().toLowerCase());
-
-        if (acc.getPassword() != null)
-            acc.setPassword(acc.getPassword().trim());
-
-        if (acc.getRole() != null)
-            acc.setRole(acc.getRole().trim().toUpperCase());
-
-        if (acc.getStatus() != null)
-            acc.setStatus(acc.getStatus().trim().toUpperCase());
-    }
-
-    // ================== VALIDATE ==================
-    private boolean validateForAdd(Account acc) {
-
-        if (acc.getUsername() == null || acc.getUsername().length() < 4)
-            return false;
-
-        if (acc.getPassword() == null || acc.getPassword().length() < 6)
-            return false;
-
-        if (!ADMIN.equals(acc.getRole()) && !STAFF.equals(acc.getRole()))
-            return false;
-
-        return true;
     }
 }
