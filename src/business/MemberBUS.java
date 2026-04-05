@@ -4,146 +4,76 @@ import data.MemberDAO;
 import model.Member;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MemberBUS {
 
-    private MemberDAO dao = new MemberDAO();
+    private final MemberDAO dao = new MemberDAO();
 
-    // ================== GET ALL ==================
-    public ArrayList<Member> getAllMembers() {
-        return dao.getAll();
+    private boolean isAdmin(String role) {
+        return "Admin".equalsIgnoreCase(role);
     }
 
-    // ================== FIND ==================
-    public Member getById(int id) {
-        return dao.findById(id);
-    }
-
-    public Member getByPhone(String phone) {
-        return dao.findByPhone(phone);
-    }
-
-    // ================== VALIDATION ==================
-    private boolean isValidName(String name) {
-        return name != null && !name.trim().isEmpty();
+    private boolean isStaff(String role) {
+        return "Staff".equalsIgnoreCase(role);
     }
 
     private boolean isValidPhone(String phone) {
         return phone != null && phone.matches("0\\d{9}");
     }
 
-    private boolean isValidGender(String gender) {
-        return gender != null &&
-                (gender.equalsIgnoreCase("Male")
-                        || gender.equalsIgnoreCase("Female"));
-    }
+    // ===== ADD (ADMIN + STAFF) =====
+    public String add(Member m, String role) {
+        if (!isAdmin(role) && !isStaff(role))
+            return "Không có quyền!";
 
-    // ================== INSERT ==================
-    public String addMember(Member m) {
+        String phone = m.getPhoneNumber();
 
-        if (m == null) return "Dữ liệu không hợp lệ!";
+        // Kiểm tra định dạng
+        if (!isValidPhone(phone))
+            return "Số điện thoại không hợp lệ! Phải bắt đầu bằng 0 và đủ 10 số.";
 
-        // Chuẩn hóa dữ liệu
-        m.setFullName(m.getFullName().trim());
-        m.setPhoneNumber(m.getPhoneNumber().trim());
-        m.setGender(m.getGender().trim());
-
-        if (!isValidName(m.getFullName())) {
-            return "Tên không hợp lệ!";
-        }
-
-        if (!isValidPhone(m.getPhoneNumber())) {
-            return "Số điện thoại phải đúng định dạng VN (10 số, bắt đầu bằng 0)!";
-        }
-
-        if (!isValidGender(m.getGender())) {
-            return "Giới tính phải là Male hoặc Female!";
-        }
-
-        // Check trùng phone
-        if (dao.findByPhone(m.getPhoneNumber()) != null) {
+        // Kiểm tra trùng
+        if (dao.findByPhone(phone) != null)
             return "Số điện thoại đã tồn tại!";
-        }
 
-        boolean result = dao.insert(m);
-        return result ? "Thêm thành công!" : "Thêm thất bại!";
+        return dao.insert(m) ? "Thêm thành công!" : "Thêm thất bại!";
     }
 
-    // ================== UPDATE ==================
-    public String updateMember(Member m) {
+    // ===== UPDATE (ADMIN) =====
+    public String update(Member m, String role) {
+        if (!isAdmin(role))
+            return "Chỉ ADMIN được cập nhật!";
 
-        if (m == null) return "Dữ liệu không hợp lệ!";
+        if (!isValidPhone(m.getPhoneNumber()))
+            return "Số điện thoại không hợp lệ!";
 
-        if (m.getMemberID() <= 0) {
-            return "ID không hợp lệ!";
-        }
-
-        // Check tồn tại
-        if (dao.findById(m.getMemberID()) == null) {
-            return "Member không tồn tại!";
-        }
-
-        // Chuẩn hóa dữ liệu
-        m.setFullName(m.getFullName().trim());
-        m.setPhoneNumber(m.getPhoneNumber().trim());
-        m.setGender(m.getGender().trim());
-
-        if (!isValidName(m.getFullName())) {
-            return "Tên không hợp lệ!";
-        }
-
-        if (!isValidPhone(m.getPhoneNumber())) {
-            return "Số điện thoại phải đúng định dạng VN (10 số, bắt đầu bằng 0)!";
-        }
-
-        if (!isValidGender(m.getGender())) {
-            return "Giới tính phải là Male hoặc Female!";
-        }
-
-        // Check trùng phone (trừ chính nó)
         Member exist = dao.findByPhone(m.getPhoneNumber());
-        if (exist != null && exist.getMemberID() != m.getMemberID()) {
+        if (exist != null && exist.getMemberID() != m.getMemberID())
             return "Số điện thoại đã tồn tại!";
-        }
 
-        boolean result = dao.update(m);
-        return result ? "Cập nhật thành công!" : "Cập nhật thất bại!";
+        return dao.update(m) ? "Cập nhật thành công!" : "Cập nhật thất bại!";
     }
 
-    // ================== DELETE ==================
-    public String deleteMember(int id) {
+    // ===== DELETE (ADMIN) =====
+    public String delete(int id, String role) {
+        if (!isAdmin(role))
+            return "Chỉ ADMIN được xóa!";
 
-        if (id <= 0) {
-            return "ID không hợp lệ!";
-        }
-
-        // Check tồn tại
-        if (dao.findById(id) == null) {
-            return "Member không tồn tại!";
-        }
-
-        boolean result = dao.delete(id);
-        return result ? "Xóa thành công!" : "Xóa thất bại!";
+        return dao.delete(id) ? "Xóa thành công!" : "Xóa thất bại!";
     }
 
-    // ================== SEARCH ==================
-    public ArrayList<Member> searchByName(String keyword) {
+    // ===== SEARCH (ADMIN + STAFF) =====
+    public List<Member> search(String keyword) {
+        List<Member> list = dao.getAll();
+        if (keyword == null || keyword.isBlank()) return list;
 
-        ArrayList<Member> list = dao.getAll();
-        ArrayList<Member> result = new ArrayList<>();
-
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return list;
-        }
-
-        keyword = keyword.toLowerCase().trim();
-
+        List<Member> rs = new ArrayList<>();
+        keyword = keyword.toLowerCase();
         for (Member m : list) {
-            if (m.getFullName().toLowerCase().contains(keyword)) {
-                result.add(m);
-            }
+            if (m.getFullName().toLowerCase().contains(keyword))
+                rs.add(m);
         }
-
-        return result;
+        return rs;
     }
 }

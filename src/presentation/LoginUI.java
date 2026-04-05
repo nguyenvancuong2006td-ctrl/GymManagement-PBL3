@@ -156,8 +156,8 @@ public class LoginUI extends JFrame {
             );
 
             //  MỞ DASHBOARD + TRUYỀN ACCOUNT
-           MainFrame dashboard = new MainFrame(acc);
-            dashboard.setVisible(true);
+           MainFrame mainframe = new MainFrame(acc);
+            mainframe.setVisible(true);
             this.dispose();
 
         } catch (Exception e) {

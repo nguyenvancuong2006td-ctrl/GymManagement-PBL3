@@ -11,7 +11,7 @@ public class MainFrame extends JFrame {
     private JPanel sidebar, content, header;
     private Account account;
 
-    private JButton btnStaff, btnMember, btnPackage,
+    private JButton btnDashboard,btnStaff, btnMember, btnPackage,
             btnSchedule, btnPT, btnProduct,
             btnPayment, btnReport, btnSystem;
 
@@ -59,6 +59,7 @@ public class MainFrame extends JFrame {
 
         sidebar.add(Box.createVerticalStrut(15));
 
+        btnDashboard = createMenuButton("Dashboard");
         btnStaff = createMenuButton("Quản lý nhân viên");
         btnMember = createMenuButton("Quản lý hội viên");
         btnPackage = createMenuButton("Quản lý gói tập");
@@ -69,6 +70,7 @@ public class MainFrame extends JFrame {
         btnReport = createMenuButton("Thống kê báo cáo");
         btnSystem = createMenuButton("Quản lý hệ thống");
 
+        sidebar.add(btnDashboard);
         sidebar.add(btnStaff);
         sidebar.add(btnMember);
         sidebar.add(btnPackage);
@@ -110,11 +112,25 @@ public class MainFrame extends JFrame {
         content.add(card, BorderLayout.CENTER);
         add(content, BorderLayout.CENTER);
 
-        SwingUtilities.invokeLater(() -> setActiveButton(btnStaff));
+        SwingUtilities.invokeLater(() -> {
+            setActiveButton(btnDashboard);
+            content.removeAll();
+            content.add(new DashboardUI(), BorderLayout.CENTER);
+            content.revalidate();
+            content.repaint();
+        });
     }
 
     /* ================= EVENTS ================= */
     private void initEvents() {
+
+        btnDashboard.addActionListener(e -> {
+            setActiveButton(btnDashboard);
+            content.removeAll();
+            content.add(new DashboardUI(), BorderLayout.CENTER);
+            content.revalidate();
+            content.repaint();
+        });
 
         btnStaff.addActionListener(e -> {
             setActiveButton(btnStaff);
@@ -126,7 +142,10 @@ public class MainFrame extends JFrame {
 
         btnMember.addActionListener(e -> {
             setActiveButton(btnMember);
-            showText("Quản lý hội viên");
+            content.removeAll();
+            content.add(new MemberUI(account.getRole()), BorderLayout.CENTER);
+            content.revalidate();
+            content.repaint();
         });
 
         btnPackage.addActionListener(e -> {

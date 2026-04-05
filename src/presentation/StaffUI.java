@@ -30,7 +30,7 @@ public class StaffUI extends JPanel {
     private JTable table;
     private JTextField txtSearch;
 
-    // ✅ cache data cho realtime search
+    //  cache data cho realtime search
     private List<Staff> allStaff = new ArrayList<>();
 
     private final AccountBUS accountBUS = new AccountBUS();
@@ -132,40 +132,71 @@ public class StaffUI extends JPanel {
     }
 
     // ================= TABLE + SEARCH =================
+    // ================= TABLE + SEARCH =================
     private JPanel createTablePanel() {
-        JPanel p = new JPanel(new BorderLayout(8, 8));
-        p.setOpaque(false);
+
+        // Panel ngoài
+        JPanel wrapper = new JPanel(new BorderLayout(8, 8));
+        wrapper.setOpaque(false);
+
+        // Card có tiêu đề "Staff List"
+        JPanel card = new JPanel(new BorderLayout(8, 8));
+        card.setBackground(Color.WHITE);
+        card.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(220, 220, 220)),
+                "Staff List",
+                TitledBorder.LEFT,
+                TitledBorder.TOP,
+                new Font("Segoe UI", Font.BOLD, 13)
+        ));
+
+        // ===== SEARCH UI (CHỈ UI) =====
+        JPanel searchPanel = new JPanel(new BorderLayout(6, 0));
+        searchPanel.setOpaque(false);
+
+        JLabel lblSearch = new JLabel("Search:");
+        lblSearch.setFont(new Font("Segoe UI", Font.BOLD, 13));
 
         txtSearch = new JTextField();
-        txtSearch.putClientProperty("JTextField.placeholderText", "Search by name...");
+        txtSearch.setPreferredSize(new Dimension(220, 30));
+        txtSearch.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(180, 180, 180)),
+                BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
 
-        // ✅ ENTER để search
+        // GIỮ NGUYÊN EVENT SEARCH CŨ
         txtSearch.addActionListener(e -> filterTable(txtSearch.getText()));
-
-        // ✅ SEARCH REALTIME
         txtSearch.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
             public void insertUpdate(DocumentEvent e) {
                 filterTable(txtSearch.getText());
             }
-            @Override
             public void removeUpdate(DocumentEvent e) {
                 filterTable(txtSearch.getText());
             }
-            @Override
             public void changedUpdate(DocumentEvent e) {
                 filterTable(txtSearch.getText());
             }
         });
 
+        searchPanel.add(lblSearch, BorderLayout.WEST);
+        searchPanel.add(txtSearch, BorderLayout.CENTER);
+
+        // ===== TABLE =====
         table = new JTable();
         table.setRowHeight(26);
-        table.getSelectionModel().addListSelectionListener(e -> fillFormFromTable());
+        table.getSelectionModel().addListSelectionListener(
+                e -> fillFormFromTable()
+        );
 
-        p.add(txtSearch, BorderLayout.NORTH);
-        p.add(new JScrollPane(table), BorderLayout.CENTER);
+        JScrollPane scroll = new JScrollPane(table);
+        scroll.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
 
-        return p;
+        // Add vào card
+        card.add(searchPanel, BorderLayout.NORTH);
+        card.add(scroll, BorderLayout.CENTER);
+
+        wrapper.add(card, BorderLayout.CENTER);
+        return wrapper;
     }
 
     // ================= LOGIC =================
@@ -228,7 +259,7 @@ public class StaffUI extends JPanel {
         }
     }
 
-    // ✅ LOAD DB 1 LẦN
+    //  LOAD DB 1 LẦN
     private void loadStaffTable(String keyword) {
         try {
             allStaff = staffBUS.getAll();
@@ -238,7 +269,7 @@ public class StaffUI extends JPanel {
         }
     }
 
-    // ✅ FILTER REALTIME
+    //  FILTER REALTIME
     private void filterTable(String keyword) {
         DefaultTableModel m = new DefaultTableModel(
                 new String[]{"ID", "Name", "Gender", "Phone", "Salary"}, 0
