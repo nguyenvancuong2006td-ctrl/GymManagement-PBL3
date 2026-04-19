@@ -4,6 +4,7 @@ import business.AccountBUS;
 import business.StaffBUS;
 import model.Account;
 import model.Staff;
+import model.StaffAccount;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -30,8 +31,8 @@ public class StaffUI extends JPanel {
     private JTable table;
     private JTextField txtSearch;
 
-    //  cache data cho realtime search
-    private List<Staff> allStaff = new ArrayList<>();
+
+    private List<StaffAccount> allStaff = new ArrayList<>();
 
     private final AccountBUS accountBUS = new AccountBUS();
     private final StaffBUS staffBUS = new StaffBUS();
@@ -47,21 +48,21 @@ public class StaffUI extends JPanel {
         add(createTablePanel(), BorderLayout.CENTER);
 
         lockStaff(true);
-        loadStaffTable(""); // load lần đầu
+        loadStaffTable("");
     }
 
-    // ================= TOP FORM =================
+    /* ================= TOP FORM ================= */
+
     private JPanel createTopForm() {
         JPanel panel = new JPanel(new GridLayout(1, 2, 15, 0));
         panel.setOpaque(false);
-
         panel.add(createAccountCard());
         panel.add(createStaffCard());
-
         return panel;
     }
 
-    // ================= ACCOUNT CARD =================
+    /* ================= ACCOUNT CARD ================= */
+
     private JPanel createAccountCard() {
         JPanel p = createCard("Account");
 
@@ -82,13 +83,15 @@ public class StaffUI extends JPanel {
         addRow(p, g, 2, "Role", cbRole);
         addRow(p, g, 3, "Account ID", txtAccountID);
 
-        g.gridx = 1; g.gridy = 4;
+        g.gridx = 1;
+        g.gridy = 4;
         p.add(btnCreate, g);
 
         return p;
     }
 
-    // ================= STAFF CARD =================
+    /* ================= STAFF CARD ================= */
+
     private JPanel createStaffCard() {
         JPanel p = createCard("Staff");
 
@@ -125,81 +128,101 @@ public class StaffUI extends JPanel {
         btnPanel.add(btnDelete);
         btnPanel.add(btnClear);
 
-        g.gridx = 1; g.gridy = 5;
+        g.gridx = 1;
+        g.gridy = 5;
         p.add(btnPanel, g);
 
         return p;
     }
 
-    // ================= TABLE + SEARCH =================
-    // ================= TABLE + SEARCH =================
-    private JPanel createTablePanel() {
+    /* ================= TABLE + SEARCH ================= */
 
-        // Panel ngoài
+    private JPanel createTablePanel() {
         JPanel wrapper = new JPanel(new BorderLayout(8, 8));
         wrapper.setOpaque(false);
 
-        // Card có tiêu đề "Staff List"
-        JPanel card = new JPanel(new BorderLayout(8, 8));
-        card.setBackground(Color.WHITE);
-        card.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(220, 220, 220)),
-                "Staff List",
-                TitledBorder.LEFT,
-                TitledBorder.TOP,
-                new Font("Segoe UI", Font.BOLD, 13)
-        ));
-
-        // ===== SEARCH UI (CHỈ UI) =====
-        JPanel searchPanel = new JPanel(new BorderLayout(6, 0));
-        searchPanel.setOpaque(false);
-
-        JLabel lblSearch = new JLabel("Search:");
-        lblSearch.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        JPanel card = createCard("Staff List");
+        card.setLayout(new BorderLayout(8, 8));
 
         txtSearch = new JTextField();
-        txtSearch.setPreferredSize(new Dimension(220, 30));
-        txtSearch.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(180, 180, 180)),
-                BorderFactory.createEmptyBorder(5, 8, 5, 8)
-        ));
-
-        // GIỮ NGUYÊN EVENT SEARCH CŨ
-        txtSearch.addActionListener(e -> filterTable(txtSearch.getText()));
         txtSearch.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) {
-                filterTable(txtSearch.getText());
-            }
-            public void removeUpdate(DocumentEvent e) {
-                filterTable(txtSearch.getText());
-            }
-            public void changedUpdate(DocumentEvent e) {
-                filterTable(txtSearch.getText());
-            }
+            public void insertUpdate(DocumentEvent e) { filterTable(txtSearch.getText()); }
+            public void removeUpdate(DocumentEvent e) { filterTable(txtSearch.getText()); }
+            public void changedUpdate(DocumentEvent e) {}
         });
 
-        searchPanel.add(lblSearch, BorderLayout.WEST);
+        JPanel searchPanel = new JPanel(new BorderLayout(5, 0));
+        searchPanel.add(new JLabel("Search:"), BorderLayout.WEST);
         searchPanel.add(txtSearch, BorderLayout.CENTER);
 
-        // ===== TABLE =====
         table = new JTable();
         table.setRowHeight(26);
-        table.getSelectionModel().addListSelectionListener(
-                e -> fillFormFromTable()
-        );
+        table.getSelectionModel().addListSelectionListener(e -> fillFormFromTable());
 
-        JScrollPane scroll = new JScrollPane(table);
-        scroll.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
-
-        // Add vào card
         card.add(searchPanel, BorderLayout.NORTH);
-        card.add(scroll, BorderLayout.CENTER);
+        card.add(new JScrollPane(table), BorderLayout.CENTER);
 
         wrapper.add(card, BorderLayout.CENTER);
         return wrapper;
     }
 
-    // ================= LOGIC =================
+    /* ================= DATA ================= */
+
+    private void loadStaffTable(String keyword) {
+        allStaff = staffBUS.getAllWithAccount();
+        filterTable(keyword);
+    }
+
+    private void filterTable(String keyword) {
+        DefaultTableModel m = new DefaultTableModel(
+                new String[]{
+                        "Staff ID",
+                        "Name",
+                        "Gender",
+                        "Phone",
+                        "Salary",
+                        "Username",
+                        "Password"
+                }, 0
+        );
+
+        String key = keyword == null ? "" : keyword.toLowerCase();
+
+        for (StaffAccount s : allStaff) {
+            if (s.getFullName().toLowerCase().contains(key)
+                    || s.getUsername().toLowerCase().contains(key)) {
+                m.addRow(new Object[]{
+                        s.getStaffID(),
+                        s.getFullName(),
+                        s.getGender(),
+                        s.getPhone(),
+                        s.getSalary(),
+                        s.getUsername(),
+                        s.getPassword()
+                });
+            }
+        }
+        table.setModel(m);
+    }
+
+    private void fillFormFromTable() {
+        int r = table.getSelectedRow();
+        if (r < 0) return;
+
+        txtStaffID.setText(table.getValueAt(r, 0).toString());
+        txtName.setText(table.getValueAt(r, 1).toString());
+        cbGender.setSelectedItem(table.getValueAt(r, 2));
+        txtPhone.setText(table.getValueAt(r, 3).toString());
+        txtSalary.setText(table.getValueAt(r, 4).toString());
+
+        txtUsername.setText(table.getValueAt(r, 5).toString());
+        txtPassword.setText(table.getValueAt(r, 6).toString());
+
+        lockStaff(false);
+    }
+
+    /* ================= CRUD ================= */
+
     private void createAccount() {
         try {
             Account acc = new Account();
@@ -210,112 +233,58 @@ public class StaffUI extends JPanel {
             currentAccountID = accountBUS.createStaffAccount(acc);
             txtAccountID.setText(String.valueOf(currentAccountID));
             lockStaff(false);
-
-            JOptionPane.showMessageDialog(this, "Account created");
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage());
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, e.getMessage());
         }
     }
 
     private void addStaff() {
         try {
-            Staff s = getStaffFromForm();
+            Staff s = new Staff();
+            s.setFullName(txtName.getText());
+            s.setGender(cbGender.getSelectedItem().toString());
+            s.setPhoneNumber(txtPhone.getText());
+            s.setSalary(Double.parseDouble(txtSalary.getText()));
+            s.setHireDate(LocalDate.now());
+            s.setAccountID(currentAccountID);
+
             staffBUS.addStaff(s);
             loadStaffTable("");
             clearStaffForm();
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage());
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, e.getMessage());
         }
     }
 
     private void updateStaff() {
         try {
-            if (txtStaffID.getText().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Select staff to update");
-                return;
-            }
-            Staff s = getStaffFromForm();
+            Staff s = new Staff();
             s.setStaffID(Integer.parseInt(txtStaffID.getText()));
+            s.setFullName(txtName.getText());
+            s.setGender(cbGender.getSelectedItem().toString());
+            s.setPhoneNumber(txtPhone.getText());
+            s.setSalary(Double.parseDouble(txtSalary.getText()));
+            s.setHireDate(LocalDate.now());
+
             staffBUS.updateStaff(s);
             loadStaffTable("");
             clearStaffForm();
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage());
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, e.getMessage());
         }
     }
 
     private void deleteStaff() {
         try {
-            if (txtStaffID.getText().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Select staff to delete");
-                return;
-            }
-            int id = Integer.parseInt(txtStaffID.getText());
-            staffBUS.deleteStaff(id);
+            staffBUS.deleteStaff(Integer.parseInt(txtStaffID.getText()));
             loadStaffTable("");
             clearStaffForm();
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage());
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, e.getMessage());
         }
-    }
-
-    //  LOAD DB 1 LẦN
-    private void loadStaffTable(String keyword) {
-        try {
-            allStaff = staffBUS.getAll();
-            filterTable(keyword);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    //  FILTER REALTIME
-    private void filterTable(String keyword) {
-        DefaultTableModel m = new DefaultTableModel(
-                new String[]{"ID", "Name", "Gender", "Phone", "Salary"}, 0
-        );
-
-        String key = keyword == null ? "" : keyword.toLowerCase();
-
-        for (Staff s : allStaff) {
-            if (s.getFullName().toLowerCase().contains(key)) {
-                m.addRow(new Object[]{
-                        s.getStaffID(),
-                        s.getFullName(),
-                        s.getGender(),
-                        s.getPhoneNumber(),
-                        s.getSalary()
-                });
-            }
-        }
-        table.setModel(m);
-    }
-
-    private void fillFormFromTable() {
-        int r = table.getSelectedRow();
-        if (r == -1) return;
-
-        txtStaffID.setText(table.getValueAt(r, 0).toString());
-        txtName.setText(table.getValueAt(r, 1).toString());
-        cbGender.setSelectedItem(table.getValueAt(r, 2).toString());
-        txtPhone.setText(table.getValueAt(r, 3).toString());
-        txtSalary.setText(table.getValueAt(r, 4).toString());
-        lockStaff(false);
-    }
-
-    private Staff getStaffFromForm() {
-        Staff s = new Staff();
-        s.setFullName(txtName.getText());
-        s.setGender(cbGender.getSelectedItem().toString());
-        s.setPhoneNumber(txtPhone.getText());
-        s.setSalary(Double.parseDouble(txtSalary.getText()));
-        s.setHireDate(LocalDate.now());
-        s.setAccountID(currentAccountID);
-        return s;
     }
 
     private void lockStaff(boolean b) {
-        txtStaffID.setEnabled(!b);
         txtName.setEnabled(!b);
         cbGender.setEnabled(!b);
         txtPhone.setEnabled(!b);
@@ -325,19 +294,21 @@ public class StaffUI extends JPanel {
     private void clearStaffForm() {
         txtStaffID.setText("");
         txtName.setText("");
-        cbGender.setSelectedIndex(0);
         txtPhone.setText("");
         txtSalary.setText("");
+        txtUsername.setText("");
+        txtPassword.setText("");
         table.clearSelection();
-        lockStaff(false);
+        lockStaff(true);
     }
 
-    // ================= UI HELPERS =================
+    /* ================= UI HELPERS ================= */
+
     private JPanel createCard(String title) {
         JPanel p = new JPanel();
         p.setBackground(Color.WHITE);
         p.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(220,220,220)),
+                BorderFactory.createLineBorder(new Color(220, 220, 220)),
                 title,
                 TitledBorder.LEFT,
                 TitledBorder.TOP,
@@ -355,28 +326,31 @@ public class StaffUI extends JPanel {
     }
 
     private void addRow(JPanel p, GridBagConstraints g, int y, String l, JComponent f) {
-        g.gridx = 0; g.gridy = y; g.weightx = 0;
+        g.gridx = 0;
+        g.gridy = y;
+        g.weightx = 0;
         p.add(new JLabel(l), g);
-        g.gridx = 1; g.weightx = 1;
+        g.gridx = 1;
+        g.weightx = 1;
         p.add(f, g);
     }
 
     private JButton primaryButton(String t) {
         JButton b = new JButton(t);
-        b.setBackground(new Color(52,120,208));
+        b.setBackground(new Color(52, 120, 208));
         b.setForeground(Color.WHITE);
         return b;
     }
 
     private JButton secondaryButton(String t) {
         JButton b = new JButton(t);
-        b.setBackground(new Color(180,180,180));
+        b.setBackground(new Color(180, 180, 180));
         return b;
     }
 
     private JButton dangerButton(String t) {
         JButton b = new JButton(t);
-        b.setBackground(new Color(220,80,80));
+        b.setBackground(new Color(220, 80, 80));
         b.setForeground(Color.WHITE);
         return b;
     }

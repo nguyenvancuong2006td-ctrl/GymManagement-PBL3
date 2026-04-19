@@ -2,6 +2,8 @@ package business;
 
 import data.MemberDAO;
 import model.Member;
+import model.Permission;
+import util.Session;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,69 +12,66 @@ public class MemberBUS {
 
     private final MemberDAO dao = new MemberDAO();
 
-    private boolean isAdmin(String role) {
-        return "Admin".equalsIgnoreCase(role);
-    }
-
-    private boolean isStaff(String role) {
-        return "Staff".equalsIgnoreCase(role);
-    }
-
     private boolean isValidPhone(String phone) {
         return phone != null && phone.matches("0\\d{9}");
     }
 
     // ===== ADD (ADMIN + STAFF) =====
-    public String add(Member m, String role) {
-        if (!isAdmin(role) && !isStaff(role))
-            return "Không có quyền!";
+    public Member add(Member m) {
+        AuthorizationService.check(Permission.MEMBER_ADD);
 
-        String phone = m.getPhoneNumber();
+        if (!isValidPhone(m.getPhoneNumber()))
+            throw new IllegalArgumentException(
+                    "Số điện thoại không hợp lệ! Phải bắt đầu bằng 0 và đủ 10 số."
+            );
 
-        // Kiểm tra định dạng
-        if (!isValidPhone(phone))
-            return "Số điện thoại không hợp lệ! Phải bắt đầu bằng 0 và đủ 10 số.";
+        if (dao.findByPhone(m.getPhoneNumber()) != null)
+            throw new IllegalArgumentException("Số điện thoại đã tồn tại!");
 
-        // Kiểm tra trùng
-        if (dao.findByPhone(phone) != null)
-            return "Số điện thoại đã tồn tại!";
+        if (!dao.insert(m))
+            throw new RuntimeException("Thêm thất bại!");
 
-        return dao.insert(m) ? "Thêm thành công!" : "Thêm thất bại!";
+        // ✅ Trả về hội viên vừa tạo (có memberID)
+        return dao.getLatest();
     }
 
     // ===== UPDATE (ADMIN) =====
-    public String update(Member m, String role) {
-        if (!isAdmin(role))
-            return "Chỉ ADMIN được cập nhật!";
+    public void update(Member m) {
+        AuthorizationService.check(Permission.MEMBER_UPDATE);
 
         if (!isValidPhone(m.getPhoneNumber()))
-            return "Số điện thoại không hợp lệ!";
+            throw new IllegalArgumentException("Số điện thoại không hợp lệ!");
 
         Member exist = dao.findByPhone(m.getPhoneNumber());
         if (exist != null && exist.getMemberID() != m.getMemberID())
-            return "Số điện thoại đã tồn tại!";
+            throw new IllegalArgumentException("Số điện thoại đã tồn tại!");
 
-        return dao.update(m) ? "Cập nhật thành công!" : "Cập nhật thất bại!";
+        if (!dao.update(m))
+            throw new RuntimeException("Cập nhật thất bại!");
     }
 
     // ===== DELETE (ADMIN) =====
-    public String delete(int id, String role) {
-        if (!isAdmin(role))
-            return "Chỉ ADMIN được xóa!";
+    public void delete(int id) {
+        AuthorizationService.check(Permission.MEMBER_DELETE);
 
-        return dao.delete(id) ? "Xóa thành công!" : "Xóa thất bại!";
+        if (!dao.delete(id))
+            throw new RuntimeException("Xóa thất bại!");
     }
 
     // ===== SEARCH (ADMIN + STAFF) =====
     public List<Member> search(String keyword) {
+        AuthorizationService.check(Permission.MEMBER_VIEW);
+
         List<Member> list = dao.getAll();
         if (keyword == null || keyword.isBlank()) return list;
 
         List<Member> rs = new ArrayList<>();
         keyword = keyword.toLowerCase();
+
         for (Member m : list) {
-            if (m.getFullName().toLowerCase().contains(keyword))
+            if (m.getFullName().toLowerCase().contains(keyword)) {
                 rs.add(m);
+            }
         }
         return rs;
     }

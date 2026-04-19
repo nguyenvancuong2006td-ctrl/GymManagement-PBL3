@@ -1,49 +1,87 @@
 package model;
 
-import java.time.LocalDate;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Invoice {
+
     private int invoiceID;
-    private LocalDate invoiceDate;
-    private double totalAmount;
+    private LocalDateTime invoiceDate;
+    private BigDecimal totalAmount;
     private int staffID;
     private int memberID;
+    private String staffName;
 
-    public Invoice() {}
 
-    public Invoice(int invoiceID, LocalDate invoiceDate, double totalAmount, int staffID) {
-        this.invoiceID = invoiceID;
-        this.invoiceDate = invoiceDate;
+    public Invoice() {
+    }
+
+    // Constructor dùng khi INSERT (KHÔNG invoiceID, KHÔNG invoiceDate)
+    public Invoice(BigDecimal totalAmount, int staffID, int memberID) {
         this.totalAmount = totalAmount;
         this.staffID = staffID;
         this.memberID = memberID;
     }
 
-    public int getInvoiceID() { return invoiceID; }
-    public void setInvoiceID(int invoiceID) { this.invoiceID = invoiceID; }
+    // ===== Getter / Setter =====
+    public int getInvoiceID() {
+        return invoiceID;
+    }
+    public void setInvoiceID(int invoiceID) {
+        this.invoiceID = invoiceID;
+    }
 
-    public LocalDate getInvoiceDate() { return invoiceDate; }
-    public void setInvoiceDate(LocalDate invoiceDate) { this.invoiceDate = invoiceDate; }
+    public LocalDateTime getInvoiceDate() {
+        return invoiceDate;
+    }
+    public void setInvoiceDate(LocalDateTime invoiceDate) {
+        this.invoiceDate = invoiceDate;
+    }
 
-    public double getTotalAmount() { return totalAmount; }
-    public void setTotalAmount(double totalAmount) { this.totalAmount = totalAmount; }
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
+    }
 
-    public int getStaffID() { return staffID; }
-    public void setStaffID(int staffID) { this.staffID = staffID; }
+    public int getStaffID() {
+        return staffID;
+    }
+    public void setStaffID(int staffID) {
+        this.staffID = staffID;
+    }
 
-    public int getMemberID() { return memberID; }
-    public void setMemberID(int memberID) { this.memberID = memberID; }
+    public String getStaffName() {
+        return staffName;
+    }
+    public void setStaffName(String staffName) {
+        this.staffName = staffName;
+    }
+
+    public int getMemberID() {
+        return memberID;
+    }
+    public void setMemberID(int memberID) {
+        this.memberID = memberID;
+    }
+
+
 
     @Override
     public String toString() {
-        return "Invoice{" + invoiceID + ", " + totalAmount + "}";
+        return "Invoice{" +
+                "invoiceID=" + invoiceID +
+                ", totalAmount=" + totalAmount +
+                '}';
     }
 
     @Override
     public boolean equals(Object o) {
-        return (o instanceof Invoice) &&
-                ((Invoice)o).invoiceID == invoiceID;
+        if (this == o) return true;
+        if (!(o instanceof Invoice invoice)) return false;
+        return invoiceID > 0 && invoiceID == invoice.invoiceID;
     }
 
     @Override

@@ -165,4 +165,59 @@ public class MemberDAO {
             throw new RuntimeException("Error deleting member", e);
         }
     }
+
+
+    // ================== GET NAME BY ID ==================
+    public String getNameByID(int memberID) {
+        String sql = """
+            SELECT fullName
+            FROM Member
+            WHERE memberID = ?
+        """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, memberID);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("fullName");
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error getting member name by ID", e);
+        }
+
+        return "Không xác định";
+    }
+
+
+    public Member getLatest() {
+        String sql = """
+        SELECT TOP 1 *
+        FROM Member
+        ORDER BY memberID DESC
+    """;
+
+        try (Connection c = DBConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            if (!rs.next()) return null;
+
+            Member m = new Member();
+            m.setMemberID(rs.getInt("memberID"));
+            m.setFullName(rs.getString("fullName"));
+            m.setGender(rs.getString("gender"));
+            m.setPhoneNumber(rs.getString("phoneNumber"));
+            m.setJoinDate(rs.getTimestamp("joinDate").toLocalDateTime());
+            return m;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Get latest member failed", e);
+        }
+    }
+
 }

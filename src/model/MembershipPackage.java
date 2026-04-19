@@ -29,10 +29,6 @@ public class MembershipPackage {
     public double getPrice() { return price; }
     public void setPrice(double price) { this.price = price; }
 
-    @Override
-    public String toString() {
-        return "Package{" + packageID + ", " + packageName + "}";
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -40,8 +36,16 @@ public class MembershipPackage {
                 ((MembershipPackage)o).packageID == packageID;
     }
 
+
     @Override
     public int hashCode() {
         return Objects.hash(packageID);
     }
+
+
+    @Override
+    public String toString() {
+        return packageName + " (" + duration + " tháng)";
+    }
+
 }

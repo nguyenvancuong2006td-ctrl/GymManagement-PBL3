@@ -1,18 +1,20 @@
 package presentation;
 
 import model.Account;
+import model.Permission;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class MainFrame extends JFrame {
 
     private JPanel sidebar, content, header;
     private Account account;
 
-    private JButton btnDashboard,btnStaff, btnMember, btnPackage,
-            btnSchedule, btnPT, btnProduct,
+    private JButton btnDashboard, btnStaff, btnMember, btnPackage,
+            btnSchedule, btnPT, btnProduct,btnProductShop,
             btnPayment, btnReport, btnSystem;
 
     private JButton activeButton = null;
@@ -37,6 +39,7 @@ public class MainFrame extends JFrame {
     }
 
     /* ================= HEADER ================= */
+
     private void initHeader() {
         header = new JPanel(new BorderLayout());
         header.setPreferredSize(new Dimension(0, 55));
@@ -51,6 +54,7 @@ public class MainFrame extends JFrame {
     }
 
     /* ================= SIDEBAR ================= */
+
     private void initSidebar() {
         sidebar = new JPanel();
         sidebar.setPreferredSize(new Dimension(240, getHeight()));
@@ -66,6 +70,7 @@ public class MainFrame extends JFrame {
         btnSchedule = createMenuButton("Quản lý lịch tập");
         btnPT = createMenuButton("Quản lý PT");
         btnProduct = createMenuButton("Quản lý sản phẩm");
+        btnProductShop = createMenuButton("Product Shop");
         btnPayment = createMenuButton("Quản lý thanh toán");
         btnReport = createMenuButton("Thống kê báo cáo");
         btnSystem = createMenuButton("Quản lý hệ thống");
@@ -77,6 +82,7 @@ public class MainFrame extends JFrame {
         sidebar.add(btnSchedule);
         sidebar.add(btnPT);
         sidebar.add(btnProduct);
+        sidebar.add(btnProductShop);
         sidebar.add(btnPayment);
         sidebar.add(btnReport);
         sidebar.add(btnSystem);
@@ -96,6 +102,7 @@ public class MainFrame extends JFrame {
     }
 
     /* ================= CONTENT ================= */
+
     private void initContent() {
         content = new JPanel(new BorderLayout());
         content.setBackground(new Color(240, 242, 245));
@@ -112,146 +119,170 @@ public class MainFrame extends JFrame {
         content.add(card, BorderLayout.CENTER);
         add(content, BorderLayout.CENTER);
 
-        SwingUtilities.invokeLater(() -> {
-            setActiveButton(btnDashboard);
-            content.removeAll();
-            content.add(new DashboardUI(), BorderLayout.CENTER);
-            content.revalidate();
-            content.repaint();
-        });
+        SwingUtilities.invokeLater(() ->
+                openPanel(btnDashboard, new DashboardUI())
+        );
     }
 
-    /* ================= EVENTS ================= */
-    private void initEvents() {
+    /* ================= OPEN PANEL ================= */
 
-        btnDashboard.addActionListener(e -> {
-            setActiveButton(btnDashboard);
-            content.removeAll();
-            content.add(new DashboardUI(), BorderLayout.CENTER);
-            content.revalidate();
-            content.repaint();
-        });
-
-        btnStaff.addActionListener(e -> {
-            setActiveButton(btnStaff);
-            content.removeAll();
-            content.add(new StaffUI(), BorderLayout.CENTER);
-            content.revalidate();
-            content.repaint();
-        });
-
-        btnMember.addActionListener(e -> {
-            setActiveButton(btnMember);
-            content.removeAll();
-            content.add(new MemberUI(account.getRole()), BorderLayout.CENTER);
-            content.revalidate();
-            content.repaint();
-        });
-
-        btnPackage.addActionListener(e -> {
-            setActiveButton(btnPackage);
-            showText("Quản lý gói tập");
-        });
-
-        btnSchedule.addActionListener(e -> {
-            setActiveButton(btnSchedule);
-            showText("Quản lý lịch tập");
-        });
-
-        btnPT.addActionListener(e -> {
-            setActiveButton(btnPT);
-            showText("Quản lý PT");
-        });
-
-        btnProduct.addActionListener(e -> {
-            setActiveButton(btnProduct);
-            showText("Quản lý sản phẩm");
-        });
-
-        btnPayment.addActionListener(e -> {
-            setActiveButton(btnPayment);
-            showText("Quản lý thanh toán");
-        });
-
-        btnReport.addActionListener(e -> {
-            setActiveButton(btnReport);
-            showText("Thống kê báo cáo");
-        });
-
-        btnSystem.addActionListener(e -> {
-            setActiveButton(btnSystem);
-            showText("Quản lý hệ thống");
-        });
-    }
-
-    /* ================= ACTIVE BUTTON ================= */
-    private void setActiveButton(JButton btn) {
-        if (activeButton != null) {
-            activeButton.setBackground(new Color(245, 247, 250));
-            activeButton.setForeground(new Color(60, 60, 60));
-            activeButton.setBorder(new RoundedBorder(10, new Color(210, 215, 220)));
-        }
-
-        btn.setBackground(new Color(52, 120, 208));
-        btn.setForeground(Color.WHITE);
-        btn.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 4, 0, 0, new Color(30, 90, 180)),
-                new RoundedBorder(10, new Color(52, 120, 208))
-        ));
-
-        activeButton = btn;
-    }
-
-    /* ================= SHOW TEXT ================= */
-    private void showText(String text) {
+    private void openPanel(JButton btn, JPanel panel) {
+        setActiveButton(btn);
         content.removeAll();
-
-        JLabel label = new JLabel(text, SwingConstants.CENTER);
-        label.setFont(new Font("Segoe UI", Font.BOLD, 22));
-
-        JPanel card = createCardPanel();
-        card.add(label, BorderLayout.CENTER);
-
-        content.add(card, BorderLayout.CENTER);
+        content.add(panel, BorderLayout.CENTER);
         content.revalidate();
         content.repaint();
     }
 
-    /* ================= PERMISSION ================= */
-    private void applyPermission() {
-        if (account.getRole().equalsIgnoreCase("Staff")) {
-            btnReport.setVisible(false);
-            btnSystem.setVisible(false);
-            btnStaff.setVisible(false);
-        }
+    /* ================= EVENTS ================= */
+
+    private void initEvents() {
+
+        btnDashboard.addActionListener(e ->
+                openPanel(btnDashboard, new DashboardUI())
+        );
+
+        btnStaff.addActionListener(e -> {
+            if (!account.hasPermission(Permission.STAFF_VIEW)) {
+                deny(); return;
+            }
+            openPanel(btnStaff, new StaffUI());
+        });
+
+        btnMember.addActionListener(e -> {
+            if (!account.hasPermission(Permission.MEMBER_VIEW)) {
+                deny(); return;
+            }
+            openPanel(btnMember, new MemberUI());
+        });
+
+        btnPackage.addActionListener(e -> {
+            if (!account.hasPermission(Permission.PACKAGE_VIEW)) {
+                deny(); return;
+            }
+            openPanel(btnPackage, new MembershipPackageUI());
+        });
+
+        btnSchedule.addActionListener(e -> {
+            if (!account.hasPermission(Permission.SCHEDULE_VIEW)) {
+                deny(); return;
+            }
+            openPanel(btnSchedule, new WorkoutScheduleUI());
+            setActiveButton(btnSchedule);
+        });
+
+        btnPT.addActionListener(e -> {
+            if (!account.hasPermission(Permission.TRAINER_VIEW)) {
+                deny(); return;
+            }
+            openPanel(btnPT, new TrainerUI());
+        });
+
+        btnProduct.addActionListener(e -> {
+            if (!account.hasPermission(Permission.PRODUCT_MANAGE)) {
+                deny(); return;
+            }
+            openPanel(btnProduct, new ProductManagementUI());
+            setActiveButton(btnProduct);
+        });
+
+
+        btnProductShop.addActionListener(e -> {
+            if (!account.hasPermission(Permission.PRODUCT_SHOP_VIEW)) {
+                deny();
+                return;
+            }
+            openPanel(btnProductShop, new ProductShopUI());
+        });
+
+
+
+        btnPayment.addActionListener(e -> {
+            if (!account.hasPermission(Permission.PAYMENT_VIEW)) {
+                deny();
+                return;
+            }
+            openPanel(btnPayment, new PaymentManagementUI());
+        });
+
+
+        btnReport.addActionListener(e -> {
+            if (!account.hasPermission(Permission.REPORT_VIEW)) {
+                deny(); return;
+            }
+            showText("Thống kê báo cáo");
+            setActiveButton(btnReport);
+        });
+
+        btnSystem.addActionListener(e -> {
+            if (!account.hasPermission(Permission.ACCOUNT_MANAGE)) {
+                deny(); return;
+            }
+            showText("Quản lý hệ thống");
+            setActiveButton(btnSystem);
+        });
     }
 
-    /* ================= UI ================= */
+    /* ================= PERMISSION UI ================= */
+
+    private void applyPermission() {
+        btnDashboard.setVisible(account.hasPermission(Permission.DASHBOARD_VIEW));
+        btnStaff.setVisible(account.hasPermission(Permission.STAFF_VIEW));
+        btnMember.setVisible(account.hasPermission(Permission.MEMBER_VIEW));
+        btnPackage.setVisible(account.hasPermission(Permission.PACKAGE_VIEW));
+        btnSchedule.setVisible(account.hasPermission(Permission.SCHEDULE_VIEW));
+        btnPT.setVisible(account.hasPermission(Permission.TRAINER_VIEW));
+        btnProduct.setVisible(account.hasPermission(Permission.PRODUCT_MANAGE));
+        btnProductShop.setVisible(account.hasPermission(Permission.PRODUCT_SHOP_VIEW));
+        btnPayment.setVisible(account.hasPermission(Permission.PAYMENT_VIEW));
+        btnReport.setVisible(account.hasPermission(Permission.REPORT_VIEW));
+        btnSystem.setVisible(account.hasPermission(Permission.ACCOUNT_MANAGE));
+    }
+
+    /* ================= HELPERS ================= */
+
+    private void deny() {
+        JOptionPane.showMessageDialog(
+                this,
+                "Bạn không có quyền truy cập chức năng này!",
+                "Từ chối truy cập",
+                JOptionPane.WARNING_MESSAGE
+        );
+    }
+
+    private void setActiveButton(JButton btn) {
+        if (activeButton != null) {
+            activeButton.setBackground(new Color(245, 247, 250));
+            activeButton.setForeground(new Color(60, 60, 60));
+            activeButton.setBorder(new RoundedBorder(12, new Color(220, 220, 220)));
+        }
+
+        btn.setBackground(new Color(52, 120, 208));
+        btn.setForeground(Color.WHITE);
+        btn.setBorder(new RoundedBorder(12, new Color(52, 120, 208)));
+        activeButton = btn;
+    }
+
     private JButton createMenuButton(String text) {
         JButton btn = new JButton(text);
         btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
         btn.setAlignmentX(Component.LEFT_ALIGNMENT);
         btn.setHorizontalAlignment(SwingConstants.LEFT);
         btn.setFocusPainted(false);
-
         btn.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         btn.setBackground(new Color(245, 247, 250));
         btn.setForeground(new Color(60, 60, 60));
-        btn.setBorder(new RoundedBorder(10, new Color(210, 215, 220)));
+        btn.setBorder(new RoundedBorder(12, new Color(220, 220, 220)));
 
-        btn.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                if (btn != activeButton) {
-                    btn.setBackground(new Color(220, 230, 245));
-                    btn.setBorder(new RoundedBorder(10, new Color(120, 160, 220)));
-                }
+        btn.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) {
+                if (btn != activeButton)
+                    btn.setBackground(new Color(230, 235, 240));
             }
 
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                if (btn != activeButton) {
+            public void mouseExited(MouseEvent e) {
+                if (btn != activeButton)
                     btn.setBackground(new Color(245, 247, 250));
-                    btn.setBorder(new RoundedBorder(10, new Color(210, 215, 220)));
-                }
             }
         });
 
@@ -261,42 +292,19 @@ public class MainFrame extends JFrame {
     private JPanel createCardPanel() {
         JPanel card = new JPanel(new BorderLayout());
         card.setBackground(Color.WHITE);
-        card.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        card.setBorder(BorderFactory.createCompoundBorder(
+                new RoundedBorder(18, new Color(220, 220, 220)),
+                BorderFactory.createEmptyBorder(20, 20, 20, 20)
+        ));
         return card;
     }
-}
 
-/* ================= ROUNDED BORDER ================= */
-class RoundedBorder implements Border {
-
-    private final int radius;
-    private final Color color;
-
-    public RoundedBorder(int radius, Color color) {
-        this.radius = radius;
-        this.color = color;
-    }
-
-    @Override
-    public Insets getBorderInsets(Component c) {
-        return new Insets(6, 12, 6, 12);
-    }
-
-    @Override
-    public boolean isBorderOpaque() {
-        return false;
-    }
-
-    @Override
-    public void paintBorder(Component c, Graphics g, int x, int y,
-                            int width, int height) {
-
-        Graphics2D g2 = (Graphics2D) g.create();
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setColor(color);
-
-        g2.drawRoundRect(x, y, width - 1, height - 1, radius, radius);
-        g2.dispose();
+    private void showText(String text) {
+        content.removeAll();
+        JLabel label = new JLabel(text, SwingConstants.CENTER);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        content.add(label, BorderLayout.CENTER);
+        content.revalidate();
+        content.repaint();
     }
 }

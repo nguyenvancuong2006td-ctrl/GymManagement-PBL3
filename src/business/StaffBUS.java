@@ -2,6 +2,7 @@ package business;
 
 import data.StaffDAO;
 import model.Staff;
+import model.StaffAccount;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -43,4 +44,9 @@ public class StaffBUS {
     public List<Staff> getAll() throws SQLException {
         return dao.getAll();
     }
+
+    public List<StaffAccount> getAllWithAccount() {
+        return dao.getAllWithAccount();
+    }
+
 }

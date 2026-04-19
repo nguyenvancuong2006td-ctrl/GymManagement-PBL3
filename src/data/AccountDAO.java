@@ -12,24 +12,33 @@ public class AccountDAO {
     /* ================= MAP RESULT ================= */
     private Account map(ResultSet rs) throws SQLException {
         Account acc = new Account();
+
         acc.setAccountID(rs.getInt("accountID"));
         acc.setUsername(rs.getString("username"));
+
+        // ĐÚNG CỘT TRONG DB
         acc.setPassword(rs.getString("password"));
+
+        // MAP STRING → ENUM Role
         acc.setRole(rs.getString("role"));
+
         acc.setStatus(rs.getString("status"));
 
         Date date = rs.getDate("createDate");
         if (date != null) {
             acc.setCreateDate(date.toLocalDate());
         }
+
         return acc;
     }
 
     /* ================= SELECT ================= */
+
     public Account getById(int id) throws SQLException {
         String sql = "SELECT * FROM Account WHERE accountID=?";
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
+
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? map(rs) : null;
@@ -41,6 +50,7 @@ public class AccountDAO {
         String sql = "SELECT * FROM Account WHERE username=?";
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
+
             ps.setString(1, username);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? map(rs) : null;
@@ -51,38 +61,50 @@ public class AccountDAO {
     public List<Account> getAll() throws SQLException {
         List<Account> list = new ArrayList<>();
         String sql = "SELECT * FROM Account";
+
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) list.add(map(rs));
+
+            while (rs.next()) {
+                list.add(map(rs));
+            }
         }
         return list;
     }
 
     /* ================= INSERT ================= */
 
-    // Dùng cho Admin/System (không cần ID)
     public boolean insert(Account acc) throws SQLException {
-        String sql = "INSERT INTO Account(username,password,role,status) VALUES(?,?,?,?)";
+        String sql =
+                "INSERT INTO Account(username, password, role, status) VALUES (?, ?, ?, ?)";
+
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
+
             ps.setString(1, acc.getUsername());
             ps.setString(2, acc.getPassword());
-            ps.setString(3, acc.getRole());
+
+            // ✅ ENUM → STRING
+            ps.setString(3, acc.getRoleString());
+
             ps.setString(4, acc.getStatus());
+
             return ps.executeUpdate() > 0;
         }
     }
 
-    // Dùng cho Staff (BẮT BUỘC)
     public int insertAndReturnID(Account acc) throws SQLException {
-        String sql = "INSERT INTO Account(username,password,role,status) VALUES(?,?,?,?)";
+        String sql =
+                "INSERT INTO Account(username, password, role, status) VALUES (?, ?, ?, ?)";
+
         try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement ps =
+                     con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setString(1, acc.getUsername());
             ps.setString(2, acc.getPassword());
-            ps.setString(3, acc.getRole());
+            ps.setString(3, acc.getRoleString());
             ps.setString(4, acc.getStatus());
 
             ps.executeUpdate();
@@ -93,19 +115,21 @@ public class AccountDAO {
         }
     }
 
-    /* ================= UPDATE & DELETE ================= */
+    /* ================= UPDATE ================= */
+
     public boolean update(Account acc) throws SQLException {
         String sql = """
-            UPDATE Account 
+            UPDATE Account
             SET username=?, password=?, role=?, status=?
             WHERE accountID=?
         """;
+
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, acc.getUsername());
             ps.setString(2, acc.getPassword());
-            ps.setString(3, acc.getRole());
+            ps.setString(3, acc.getRoleString());
             ps.setString(4, acc.getStatus());
             ps.setInt(5, acc.getAccountID());
 
@@ -113,20 +137,25 @@ public class AccountDAO {
         }
     }
 
+    /* ================= DELETE ================= */
+
     public boolean delete(int id) throws SQLException {
         String sql = "DELETE FROM Account WHERE accountID=?";
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
+
             ps.setInt(1, id);
             return ps.executeUpdate() > 0;
         }
     }
 
     /* ================= CHECK RELATION ================= */
+
     public boolean isLinkedToStaff(int accountID) throws SQLException {
         String sql = "SELECT 1 FROM Staff WHERE accountID=?";
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
+
             ps.setInt(1, accountID);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();

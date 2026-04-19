@@ -1,7 +1,11 @@
 package presentation;
 
 import business.MemberBUS;
+import data.MemberPackageDAO;
 import model.Member;
+import model.MemberPackage;
+import model.Role;
+import util.Session;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -13,9 +17,6 @@ import java.util.List;
 
 public class MemberUI extends JPanel {
 
-    // ===== ROLE =====
-    private final String role; // "ADMIN" | "STAFF"
-
     // ===== FORM =====
     private JTextField txtID, txtName, txtPhone, txtJoinDate;
     private JComboBox<String> cbGender;
@@ -25,14 +26,12 @@ public class MemberUI extends JPanel {
     private JTextField txtSearch;
 
     // ===== BUTTON =====
-    private JButton btnAdd, btnUpdate, btnDelete, btnClear;
+    private JButton btnAdd, btnUpdate, btnDelete, btnClear, btnRegisterPackage;
 
     private final MemberBUS memberBUS = new MemberBUS();
     private List<Member> allMembers = new ArrayList<>();
 
-    // ===== CONSTRUCTOR =====
-    public MemberUI(String role) {
-        this.role = role;
+    public MemberUI() {
 
         setLayout(new BorderLayout(10, 10));
         setBackground(new Color(240, 242, 245));
@@ -42,11 +41,12 @@ public class MemberUI extends JPanel {
         add(createTablePanel(), BorderLayout.CENTER);
 
         loadData();
-        applyRolePermission();
+        applyUiPermission();
         clearForm();
     }
 
     /* ================= FORM ================= */
+
     private JPanel createFormPanel() {
         JPanel p = new JPanel(new BorderLayout(8, 8));
         p.setBackground(Color.WHITE);
@@ -60,7 +60,7 @@ public class MemberUI extends JPanel {
         txtID = field(false);
         txtName = field(true);
         txtPhone = field(true);
-        txtJoinDate = field(false); // read-only
+        txtJoinDate = field(false);
 
         cbGender = new JComboBox<>(new String[]{"Male", "Female"});
 
@@ -80,29 +80,33 @@ public class MemberUI extends JPanel {
         btnUpdate = btn("Update", new Color(255, 152, 0));
         btnDelete = btn("Delete", new Color(220, 80, 80));
         btnClear = btn("Clear", new Color(180, 180, 180));
+        btnRegisterPackage = btn("Đăng ký gói", new Color(33, 150, 243));
+
+        btnRegisterPackage.setEnabled(false);
 
         btnAdd.addActionListener(e -> addMember());
         btnUpdate.addActionListener(e -> updateMember());
         btnDelete.addActionListener(e -> deleteMember());
         btnClear.addActionListener(e -> clearForm());
+        btnRegisterPackage.addActionListener(e -> registerPackageFlow());
 
         p.add(btnAdd);
         p.add(btnUpdate);
         p.add(btnDelete);
+        p.add(btnRegisterPackage);
         p.add(btnClear);
         return p;
     }
 
     /* ================= TABLE + SEARCH ================= */
+
     private JPanel createTablePanel() {
         JPanel p = new JPanel(new BorderLayout(6, 6));
         p.setBackground(Color.WHITE);
         p.setBorder(BorderFactory.createTitledBorder("Member List"));
 
-        // ===== SEARCH BAR (CÂN ĐỐI) =====
         txtSearch = new JTextField();
         txtSearch.setPreferredSize(new Dimension(200, 28));
-        txtSearch.setToolTipText("Search member by name");
 
         txtSearch.getDocument().addDocumentListener(new DocumentListener() {
             public void insertUpdate(DocumentEvent e) { filter(); }
@@ -110,23 +114,10 @@ public class MemberUI extends JPanel {
             public void changedUpdate(DocumentEvent e) { filter(); }
         });
 
-        JPanel top = new JPanel(new GridBagLayout());
-        top.setBackground(Color.WHITE);
-        top.setBorder(BorderFactory.createEmptyBorder(5, 8, 5, 8));
+        JPanel top = new JPanel(new BorderLayout(5, 0));
+        top.add(new JLabel("Search:"), BorderLayout.WEST);
+        top.add(txtSearch, BorderLayout.CENTER);
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(0, 5, 0, 5);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        gbc.gridx = 0;
-        gbc.weightx = 0;
-        top.add(new JLabel("Search:"), gbc);
-
-        gbc.gridx = 1;
-        gbc.weightx = 1;
-        top.add(txtSearch, gbc);
-
-        // ===== TABLE =====
         table = new JTable();
         table.setRowHeight(26);
         table.getSelectionModel().addListSelectionListener(e -> fillForm());
@@ -137,12 +128,9 @@ public class MemberUI extends JPanel {
     }
 
     /* ================= DATA ================= */
+
     private void loadData() {
-        if ("ADMIN".equalsIgnoreCase(role)) {
-            allMembers = memberBUS.search(null);
-        } else {
-            allMembers = new ArrayList<>();
-        }
+        allMembers = memberBUS.search(null);
         fillTable(allMembers);
     }
 
@@ -175,37 +163,44 @@ public class MemberUI extends JPanel {
     }
 
     /* ================= CRUD ================= */
+
     private Member getFormData() {
         Member m = new Member();
-
-        if (!txtID.getText().isEmpty()) {
+        if (!txtID.getText().isEmpty())
             m.setMemberID(Integer.parseInt(txtID.getText()));
-        }
+
         m.setFullName(txtName.getText());
         m.setGender(cbGender.getSelectedItem().toString());
         m.setPhoneNumber(txtPhone.getText());
-
         return m;
     }
 
     private void addMember() {
-        JOptionPane.showMessageDialog(this,
-                memberBUS.add(getFormData(), role));
-        loadData();
-        clearForm();
+        try {
+            Member created = memberBUS.add(getFormData());
+            JOptionPane.showMessageDialog(this, "Thêm hội viên thành công!");
+
+            loadData();
+            clearForm();
+
+            txtID.setText(String.valueOf(created.getMemberID()));
+            registerPackageFlow();
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, e.getMessage());
+        }
     }
 
     private void updateMember() {
-        JOptionPane.showMessageDialog(this,
-                memberBUS.update(getFormData(), role));
+        memberBUS.update(getFormData());
+        JOptionPane.showMessageDialog(this, "Cập nhật thành công");
         loadData();
         clearForm();
     }
 
     private void deleteMember() {
-        JOptionPane.showMessageDialog(this,
-                memberBUS.delete(
-                        Integer.parseInt(txtID.getText()), role));
+        memberBUS.delete(Integer.parseInt(txtID.getText()));
+        JOptionPane.showMessageDialog(this, "Xóa thành công");
         loadData();
         clearForm();
     }
@@ -214,7 +209,9 @@ public class MemberUI extends JPanel {
         int r = table.getSelectedRow();
         if (r < 0) return;
 
-        txtID.setText(table.getValueAt(r, 0).toString());
+        int memberID = Integer.parseInt(table.getValueAt(r, 0).toString());
+
+        txtID.setText(String.valueOf(memberID));
         txtName.setText(table.getValueAt(r, 1).toString());
         cbGender.setSelectedItem(table.getValueAt(r, 2));
         txtPhone.setText(table.getValueAt(r, 3).toString());
@@ -222,6 +219,11 @@ public class MemberUI extends JPanel {
 
         btnUpdate.setEnabled(true);
         btnDelete.setEnabled(true);
+
+        // ===== CHECK GÓI ACTIVE =====
+        MemberPackageDAO pkgDAO = new MemberPackageDAO();
+        MemberPackage active = pkgDAO.getActiveByMember(memberID);
+        btnRegisterPackage.setEnabled(active == null);
     }
 
     private void clearForm() {
@@ -234,15 +236,70 @@ public class MemberUI extends JPanel {
 
         btnUpdate.setEnabled(false);
         btnDelete.setEnabled(false);
+        btnRegisterPackage.setEnabled(false);
     }
 
-    private void applyRolePermission() {
-        boolean isAdmin = "ADMIN".equalsIgnoreCase(role);
-        btnUpdate.setVisible(isAdmin);
+    /* ================= REGISTER FLOW ================= */
+
+    private void registerPackageFlow() {
+        try {
+            if (txtID.getText().isEmpty()) return;
+
+            int memberID = Integer.parseInt(txtID.getText());
+
+            int choice = JOptionPane.showConfirmDialog(
+                    this,
+                    "Bạn có muốn đăng ký gói tập không?",
+                    "Đăng ký gói",
+                    JOptionPane.YES_NO_OPTION
+            );
+            if (choice == JOptionPane.NO_OPTION) return;
+
+            RegisterPackageDialog pkgDialog =
+                    new RegisterPackageDialog(
+                            SwingUtilities.getWindowAncestor(this),
+                            memberID
+                    );
+            pkgDialog.setVisible(true);
+
+            if (!pkgDialog.isRegistered()) return;
+
+            int choicePT = JOptionPane.showConfirmDialog(
+                    this,
+                    "Bạn có muốn đăng ký tập với PT không?",
+                    "Đăng ký PT",
+                    JOptionPane.YES_NO_OPTION
+            );
+
+            if (choicePT == JOptionPane.YES_OPTION) {
+                RegisterPTDialog ptDialog =
+                        new RegisterPTDialog(
+                                SwingUtilities.getWindowAncestor(this),
+                                memberID
+                        );
+                ptDialog.setVisible(true);
+            }
+
+            JOptionPane.showMessageDialog(this,
+                    "Hoàn tất đăng ký. Tiến hành thanh toán (sẽ làm sau)");
+
+            loadData();
+            clearForm();
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, e.getMessage());
+        }
+    }
+
+    /* ================= PERMISSION ================= */
+
+    private void applyUiPermission() {
+        boolean isAdmin = Session.getRole() == Role.Admin;
         btnDelete.setVisible(isAdmin);
     }
 
-    /* ================= UI HELPERS ================= */
+    /* ================= HELPERS ================= */
+
     private JTextField field(boolean enable) {
         JTextField f = new JTextField();
         f.setEnabled(enable);

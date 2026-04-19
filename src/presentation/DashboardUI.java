@@ -7,167 +7,115 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
+import java.text.NumberFormat;
+import java.time.LocalDate;
+import java.util.Locale;
 import java.util.Map;
 
 public class DashboardUI extends JPanel {
 
-    private JLabel lbMembersValue;
-    private JLabel lbTrainersValue;
-    private JLabel lbPlansValue;
-
-    private final DashboardBUS dashboardBUS = new DashboardBUS();
+    private JLabel lbMembers, lbActive, lbRevenue, lbInvoices, lbNewMembers;
     private DashboardStats stats;
 
-    public DashboardUI() {
-        setLayout(new BorderLayout(20, 20));
-        setBackground(new Color(240, 242, 245));
-        setBorder(new EmptyBorder(20, 20, 20, 20));
+    private final DashboardBUS bus = new DashboardBUS();
 
-        add(createStatsPanel(), BorderLayout.NORTH);
+    public DashboardUI() {
+        setLayout(new BorderLayout(18,18));
+        setBackground(new Color(240,242,245));
+        setBorder(new EmptyBorder(20,20,20,20));
+
+        add(createCards(), BorderLayout.NORTH);
         add(createChartPanel(), BorderLayout.CENTER);
 
         loadData();
     }
 
-    /* ===================== TOP STATS ===================== */
-    private JPanel createStatsPanel() {
-        JPanel panel = new JPanel(new GridLayout(1, 3, 20, 0));
-        panel.setOpaque(false);
+    /* ========== CARDS ========== */
 
-        panel.add(createStatCard("Total Members", lbMembersValue = new JLabel("0"),
-                new Color(66, 133, 244)));
-        panel.add(createStatCard("Total Trainers", lbTrainersValue = new JLabel("0"),
-                new Color(251, 140, 0)));
-        panel.add(createStatCard("Active Plans", lbPlansValue = new JLabel("0"),
-                new Color(46, 204, 113)));
+    private JPanel createCards() {
+        JPanel p = new JPanel(new GridLayout(2,3,15,15));
+        p.setOpaque(false);
 
-        return panel;
+        lbMembers     = addCard(p,"TOTAL MEMBERS",new Color(66,133,244));
+        lbActive      = addCard(p,"ACTIVE MEMBERS",new Color(52,168,83));
+        lbRevenue     = addCard(p,"TODAY REVENUE",new Color(251,188,5));
+        lbInvoices    = addCard(p,"TODAY INVOICES",new Color(219,68,55));
+        lbNewMembers  = addCard(p,"NEW MEMBERS TODAY",new Color(15,157,88));
+
+        return p;
     }
 
-    private JPanel createStatCard(String title, JLabel valueLabel, Color color) {
+    private JLabel addCard(JPanel parent,String title,Color c) {
         JPanel card = new JPanel(new BorderLayout());
         card.setBackground(Color.WHITE);
-        card.setBorder(new LineBorder(new Color(220, 220, 220), 1));
-        card.setPreferredSize(new Dimension(200, 110));
+        card.setBorder(new LineBorder(new Color(220,220,220)));
 
-        JLabel lbTitle = new JLabel(title);
-        lbTitle.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        lbTitle.setForeground(new Color(120, 120, 120));
+        JLabel t = new JLabel(title);
+        t.setBorder(new EmptyBorder(10,12,0,12));
+        t.setForeground(Color.GRAY);
 
-        valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 32));
-        valueLabel.setForeground(color);
+        JLabel v = new JLabel("0");
+        v.setFont(new Font("Segoe UI",Font.BOLD,26));
+        v.setForeground(c);
+        v.setBorder(new EmptyBorder(8,12,12,12));
 
-        JPanel center = new JPanel(new BorderLayout());
-        center.setOpaque(false);
-        center.add(valueLabel, BorderLayout.CENTER);
-        center.setBorder(new EmptyBorder(5, 0, 0, 0));
-
-        card.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(new Color(220, 220, 220), 1),
-                new EmptyBorder(15, 20, 15, 20)
-        ));
-
-        card.add(lbTitle, BorderLayout.NORTH);
-        card.add(center, BorderLayout.CENTER);
-
-        return card;
+        card.add(t,BorderLayout.NORTH);
+        card.add(v,BorderLayout.CENTER);
+        parent.add(card);
+        return v;
     }
 
-    /* ===================== CHART ===================== */
+    /* ========== CHART ========== */
+
     private JPanel createChartPanel() {
         JPanel panel = new JPanel() {
-            @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                drawRevenueChart(g);
+                drawChart(g);
             }
         };
         panel.setBackground(Color.WHITE);
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(new Color(220, 220, 220), 1),
-                new EmptyBorder(15, 20, 20, 20)
-        ));
+        panel.setBorder(new LineBorder(new Color(220,220,220)));
         return panel;
     }
 
-    private void drawRevenueChart(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g;
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_ON);
+    private void drawChart(Graphics g) {
+        if (stats == null) return;
 
-        // Title
-        g2.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        g2.setColor(Color.BLACK);
-        g2.drawString("Revenue by Month", 20, 30);
+        Graphics2D g2=(Graphics2D)g;
+        g2.setFont(new Font("Segoe UI",Font.BOLD,15));
+        g2.drawString("Revenue – Last 7 Days",20,30);
 
-        if (stats == null || stats.getRevenueByMonth() == null) return;
+        Map<LocalDate,Double> map = stats.getRevenueLast7Days();
+        if(map.isEmpty()) return;
 
-        Map<Integer, Double> data = stats.getRevenueByMonth();
+        int x=50, base=getHeight()-60;
+        int w=30, maxH=200;
 
-        int chartX = 60;
-        int chartY = getHeight() - 90;
-        int barWidth = 30;
-        int maxHeight = 240;
+        double max=map.values().stream().mapToDouble(v->v).max().orElse(1);
 
-        double max = data.values().stream()
-                .mapToDouble(Double::doubleValue)
-                .max()
-                .orElse(1);
-
-        int x = chartX;
-
-        g2.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-
-        // ✅ LUÔN VẼ 12 THÁNG – KỂ CẢ KHI = 0
-        for (int month = 1; month <= 12; month++) {
-
-            double value = data.getOrDefault(month, 0.0);
-            int barHeight = (int) ((value / max) * maxHeight);
-
-            // vẽ cột (tối thiểu cao 2px để nhìn thấy)
-            g2.setColor(new Color(66, 133, 244, value == 0 ? 90 : 255));
-            g2.fillRoundRect(
-                    x,
-                    chartY - Math.max(barHeight, 2),
-                    barWidth,
-                    Math.max(barHeight, 2),
-                    8,
-                    8
-            );
-
-            // text tháng
-            g2.setColor(Color.DARK_GRAY);
-            g2.drawString("M" + month, x + 4, chartY + 15);
-
-            x += barWidth + 18;
-        }
-
-        // ghi chú
-        boolean allZero = data.values().stream().allMatch(v -> v == 0.0);
-        if (allZero) {
-            g2.setFont(new Font("Segoe UI", Font.ITALIC, 13));
-            g2.setColor(Color.GRAY);
-            g2.drawString(
-                    "No revenue data yet",
-                    getWidth() / 2 - 70,
-                    chartY + 40
-            );
+        for(Double v : map.values()){
+            int h=(int)(v/max*maxH);
+            g2.setColor(new Color(66,133,244));
+            g2.fillRoundRect(x,base-h,w,h,8,8);
+            x+=w+25;
         }
     }
 
+    /* ========== LOAD ========== */
 
-    /* ===================== LOAD DATA ===================== */
     private void loadData() {
-        try {
-            stats = dashboardBUS.loadDashboard();
-            lbMembersValue.setText(String.valueOf(stats.getTotalMembers()));
-            lbTrainersValue.setText(String.valueOf(stats.getTotalTrainers()));
-            lbPlansValue.setText(String.valueOf(stats.getActivePlans()));
-            repaint();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this,
-                    "Cannot load dashboard data\n" + e.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
-        }
+        stats = bus.loadDashboard();
+
+        NumberFormat money =
+                NumberFormat.getCurrencyInstance(new Locale("vi","VN"));
+
+        lbMembers.setText(String.valueOf(stats.getTotalMembers()));
+        lbActive.setText(String.valueOf(stats.getActiveMembers()));
+        lbRevenue.setText(money.format(stats.getTodayRevenue()));
+        lbInvoices.setText(String.valueOf(stats.getTodayInvoices()));
+        lbNewMembers.setText(String.valueOf(stats.getNewMembersToday()));
+
+        repaint();
     }
 }

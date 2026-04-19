@@ -4,30 +4,34 @@ import java.time.LocalDate;
 import java.util.Objects;
 
 public class Account {
+
     private int accountID;
     private String username;
     private String password;
-    private String role;
+    private Role role;
     private LocalDate createDate;
     private String status;
 
     public Account() {}
 
-    public Account(String username, String passwordHash, String role) {
+    public Account(String username, String password, Role role) {
         this.username = username;
-        this.password = passwordHash;
+        this.password = password;
         this.role = role;
+        this.status = "Active";
     }
 
-    public Account(int accountID, String username, String passwordHash,
-                   String role, LocalDate createDate, String status) {
+    public Account(int accountID, String username, String password,
+                   Role role, LocalDate createDate, String status) {
         this.accountID = accountID;
         this.username = username;
-        this.password = passwordHash;
+        this.password = password;
         this.role = role;
         this.createDate = createDate;
         this.status = status;
     }
+
+    /* ===== GET / SET ===== */
 
     public int getAccountID() { return accountID; }
     public void setAccountID(int accountID) { this.accountID = accountID; }
@@ -36,16 +40,32 @@ public class Account {
     public void setUsername(String username) { this.username = username; }
 
     public String getPassword() { return password; }
-    public void setPassword(String passwordHash) { this.password = passwordHash; }
+    public void setPassword(String password) { this.password = password; }
 
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
+    public Role getRole() { return role; }
+
+    //  MAP TỪ DB
+    public void setRole(String roleStr) {
+        this.role = Role.valueOf(roleStr);
+    }
+
+    //  DÙNG CHO DAO
+    public String getRoleString() {
+        return role != null ? role.name() : null;
+    }
 
     public LocalDate getCreateDate() { return createDate; }
     public void setCreateDate(LocalDate createDate) { this.createDate = createDate; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public boolean hasPermission(Permission permission) {
+        return role != null && role.hasPermission(permission);
+    }
+
+
+    /* ===== OBJECT METHODS ===== */
 
     @Override
     public String toString() {
