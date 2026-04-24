@@ -1,6 +1,10 @@
 package util;
 
 import business.InvoiceBUS;
+import data.MembershipPackageDAO;
+import data.ProductDAO;
+import data.PTServiceDAO;
+
 import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
@@ -12,6 +16,7 @@ import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
+
 import model.Invoice;
 import model.InvoiceDetail;
 import model.Payment;
@@ -24,15 +29,22 @@ import java.util.List;
 
 public class InvoicePDFExporter {
 
-    public static void export(int invoiceID) {
-        try {
-            InvoiceBUS bus = new InvoiceBUS();
+    private static final InvoiceBUS bus = new InvoiceBUS();
 
+    // ✅ DAO để lấy tên item
+    private static final ProductDAO productDAO = new ProductDAO();
+    private static final MembershipPackageDAO packageDAO = new MembershipPackageDAO();
+    private static final PTServiceDAO ptServiceDAO = new PTServiceDAO();
+
+    public static void export(int invoiceID) {
+
+        try {
             Invoice invoice = bus.getInvoiceByID(invoiceID);
             List<InvoiceDetail> details = bus.getInvoiceDetails(invoiceID);
             List<Payment> payments = bus.getPayments(invoiceID);
 
             String fileName = "Invoice_" + invoiceID + ".pdf";
+
             PdfWriter writer = new PdfWriter(fileName);
             PdfDocument pdf = new PdfDocument(writer);
             Document doc = new Document(pdf);
@@ -49,7 +61,7 @@ public class InvoicePDFExporter {
             DateTimeFormatter dtf =
                     DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
-            /* ===== HEADER ===== */
+            /* ================= HEADER ================= */
             doc.add(new Paragraph("PHÒNG GYM ABC")
                     .setFont(bold)
                     .setFontSize(14)
@@ -63,13 +75,12 @@ public class InvoicePDFExporter {
                     .setFont(normal)
                     .setTextAlignment(TextAlignment.CENTER));
 
-            Paragraph line = new Paragraph()
+            doc.add(new Paragraph()
                     .setBorderBottom(new SolidBorder(1))
                     .setMarginTop(5)
-                    .setMarginBottom(10);
-            doc.add(line);
+                    .setMarginBottom(10));
 
-            /* ===== TITLE ===== */
+            /* ================= TITLE ================= */
             doc.add(new Paragraph("CHI TIẾT HÓA ĐƠN #" + invoiceID)
                     .setFont(bold)
                     .setFontSize(16)
@@ -77,9 +88,8 @@ public class InvoicePDFExporter {
 
             doc.add(new Paragraph("\n"));
 
-            /* ===== INVOICE INFO ===== */
-            Table info = new Table(2);
-            info.setWidth(UnitValue.createPercentValue(100));
+            /* ================= INVOICE INFO ================= */
+            Table info = new Table(2).setWidth(UnitValue.createPercentValue(100));
 
             info.addCell(infoCell("Ngày lập:", bold));
             info.addCell(infoCell(invoice.getInvoiceDate().format(dtf), normal));
@@ -93,14 +103,13 @@ public class InvoicePDFExporter {
             doc.add(info);
             doc.add(new Paragraph("\n"));
 
-            /* ===== PAYMENT INFO (KHÔNG CÓ THỜI GIAN) ===== */
+            /* ================= PAYMENT INFO ================= */
             if (!payments.isEmpty()) {
                 Payment p = payments.get(0);
 
-                Table payInfo = new Table(2);
-                payInfo.setWidth(UnitValue.createPercentValue(100));
+                Table payInfo = new Table(2).setWidth(UnitValue.createPercentValue(100));
 
-                payInfo.addCell(infoCell("Phương thức thanh toán:", bold));
+                payInfo.addCell(infoCell("Phương thức:", bold));
                 payInfo.addCell(infoCell(p.getPaymentMethod(), normal));
 
                 payInfo.addCell(infoCell("Trạng thái:", bold));
@@ -110,12 +119,12 @@ public class InvoicePDFExporter {
                 doc.add(new Paragraph("\n"));
             }
 
-            /* ===== DETAIL TABLE ===== */
+            /* ================= DETAIL TABLE ================= */
             Table table = new Table(new float[]{1, 4, 1, 2, 2});
             table.setWidth(UnitValue.createPercentValue(100));
 
             table.addHeaderCell(header("STT", bold));
-            table.addHeaderCell(header("Tên sản phẩm", bold));
+            table.addHeaderCell(header("Tên dịch vụ / sản phẩm", bold));
             table.addHeaderCell(header("SL", bold));
             table.addHeaderCell(header("Đơn giá", bold));
             table.addHeaderCell(header("Thành tiền", bold));
@@ -129,7 +138,7 @@ public class InvoicePDFExporter {
                 total = total.add(lineTotal);
 
                 table.addCell(data(String.valueOf(stt++), normal));
-                table.addCell(data(bus.getProductName(d.getProductID()), normal));
+                table.addCell(data(getItemName(d), normal));
                 table.addCell(data(String.valueOf(d.getQuantity()), normal));
                 table.addCell(data(formatMoney(d.getPrice()), normal));
                 table.addCell(data(formatMoney(lineTotal), normal));
@@ -138,7 +147,7 @@ public class InvoicePDFExporter {
             doc.add(table);
             doc.add(new Paragraph("\n"));
 
-            /* ===== TOTAL ===== */
+            /* ================= TOTAL ================= */
             doc.add(new Paragraph("TỔNG CỘNG: " + formatMoney(total))
                     .setFont(bold)
                     .setFontSize(14)
@@ -150,6 +159,7 @@ public class InvoicePDFExporter {
             doc.add(new Paragraph(invoice.getStaffName()).setFont(bold));
 
             doc.close();
+
             Desktop.getDesktop().open(new File(fileName));
 
         } catch (Exception e) {
@@ -157,6 +167,25 @@ public class InvoicePDFExporter {
         }
     }
 
+    /* ================= ITEM NAME ================= */
+    private static String getItemName(InvoiceDetail d) {
+
+        switch (d.getItemType()) {
+            case "PRODUCT":
+                return productDAO.getNameByID(d.getItemID());
+
+            case "PACKAGE":
+                return packageDAO.getNameByID(d.getItemID());
+
+            case "PT":
+                return ptServiceDAO.getNameByID(d.getItemID());
+
+            default:
+                return "Không xác định";
+        }
+    }
+
+    /* ================= UTIL ================= */
     private static Cell infoCell(String text, PdfFont font) {
         return new Cell()
                 .add(new Paragraph(text).setFont(font))

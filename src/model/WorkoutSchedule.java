@@ -10,7 +10,7 @@ public class WorkoutSchedule {
     private LocalDate date;
     private LocalTime startTime;
     private LocalTime endTime;
-    private int memberID;
+    private int memberPTID;
     private int trainerID;
     private String status;
 
@@ -29,7 +29,7 @@ public class WorkoutSchedule {
         this.date = date;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.memberID = memberID;
+        this.memberPTID = memberID;
         this.trainerID = trainerID;
     }
 
@@ -47,8 +47,8 @@ public class WorkoutSchedule {
     public LocalTime getEndTime() {return endTime;}
     public void setEndTime(LocalTime endTime) {this.endTime = endTime;}
 
-    public int getMemberID() {return memberID;}
-    public void setMemberID(int memberID) {this.memberID = memberID;}
+    public int getMemberPTID() {return memberPTID;}
+    public void setMemberPTID(int memberID) {this.memberPTID = memberID;}
 
     public int getTrainerID() {return trainerID;}
     public void setTrainerID(int trainerID) {this.trainerID = trainerID;}
@@ -81,7 +81,7 @@ public class WorkoutSchedule {
                 ", date=" + date +
                 ", startTime=" + startTime +
                 ", endTime=" + endTime +
-                ", memberID=" + memberID +
+                ", memberID=" + memberPTID +
                 ", trainerID=" + trainerID +
                 '}';
     }

@@ -145,4 +145,31 @@ public class ProductDAO {
 
         return "Không xác định";
     }
+
+    public void decreaseStock(
+            int productID,
+            int qty,
+            Connection conn
+    ) throws SQLException {
+
+        String sql = """
+        UPDATE Product
+        SET quantityInStock = quantityInStock - ?
+        WHERE productID = ?
+          AND quantityInStock >= ?
+    """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, qty);
+            ps.setInt(2, productID);
+            ps.setInt(3, qty);
+
+            int rows = ps.executeUpdate();
+            if (rows == 0) {
+                throw new SQLException(
+                        "Không đủ tồn kho cho sản phẩm ID = " + productID
+                );
+            }
+        }
+    }
 }

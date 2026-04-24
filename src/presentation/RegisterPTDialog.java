@@ -1,6 +1,5 @@
 package presentation;
 
-import business.MemberPTBUS;
 import data.PTServiceDAO;
 import model.PTService;
 
@@ -12,14 +11,13 @@ import java.util.List;
 public class RegisterPTDialog extends JDialog {
 
     private JTable table;
-    private JButton btnRegister, btnCancel;
+    private JButton btnSelect, btnCancel;
 
-    private boolean registered = false;
-    private final int memberID;
+    private boolean selected = false;
+    private int selectedServiceID = -1;
 
-    public RegisterPTDialog(Window owner, int memberID) {
-        super(owner, "Đăng ký PT", ModalityType.APPLICATION_MODAL);
-        this.memberID = memberID;
+    public RegisterPTDialog(Window owner) {
+        super(owner, "Chọn gói PT", ModalityType.APPLICATION_MODAL);
 
         setSize(550, 300);
         setLocationRelativeTo(owner);
@@ -65,7 +63,7 @@ public class RegisterPTDialog extends JDialog {
 
         table.setModel(model);
 
-        // Ẩn cột ID nội bộ nếu muốn
+        // Ẩn cột ID nội bộ
         table.getColumnModel().getColumn(0).setMinWidth(0);
         table.getColumnModel().getColumn(0).setMaxWidth(0);
     }
@@ -75,44 +73,44 @@ public class RegisterPTDialog extends JDialog {
     private JPanel createButtonPanel() {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 8));
 
-        btnRegister = new JButton("Đăng ký");
+        btnSelect = new JButton("Chọn");
         btnCancel = new JButton("Hủy");
 
-        btnRegister.setBackground(new Color(76, 175, 80));
-        btnRegister.setForeground(Color.WHITE);
+        btnSelect.setBackground(new Color(76, 175, 80));
+        btnSelect.setForeground(Color.WHITE);
 
-        btnRegister.addActionListener(e -> register());
+        btnSelect.addActionListener(e -> select());
         btnCancel.addActionListener(e -> dispose());
 
-        p.add(btnRegister);
+        p.add(btnSelect);
         p.add(btnCancel);
         return p;
     }
 
     /* ================= ACTION ================= */
 
-    private void register() {
+    private void select() {
         int r = table.getSelectedRow();
         if (r < 0) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn gói PT!");
             return;
         }
 
-        try {
-            int serviceID = Integer.parseInt(table.getValueAt(r, 0).toString());
+        selectedServiceID = Integer.parseInt(
+                table.getValueAt(r, 0).toString()
+        );
 
-            new MemberPTBUS().buyPT(memberID, serviceID);
-
-            registered = true;
-            JOptionPane.showMessageDialog(this, "Đăng ký PT thành công");
-            dispose();
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, e.getMessage());
-        }
+        selected = true;
+        dispose();
     }
 
-    public boolean isRegistered() {
-        return registered;
+    /* ================= GETTER ================= */
+
+    public boolean isSelected() {
+        return selected;
+    }
+
+    public int getSelectedServiceID() {
+        return selectedServiceID;
     }
 }

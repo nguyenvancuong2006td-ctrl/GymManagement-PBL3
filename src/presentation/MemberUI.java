@@ -1,11 +1,13 @@
 package presentation;
 
 import business.MemberBUS;
+import business.ServiceCheckoutBUS;
 import data.MemberPackageDAO;
-import model.Member;
-import model.MemberPackage;
-import model.Role;
+import util.InvoicePDFExporter;
+import model.*;
 import util.Session;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -120,7 +122,28 @@ public class MemberUI extends JPanel {
 
         table = new JTable();
         table.setRowHeight(26);
+        //khóa chỉnh sửa trong table
+        table.setDefaultEditor(Object.class, null);
         table.getSelectionModel().addListSelectionListener(e -> fillForm());
+
+        // ✅ DOUBLE CLICK HERE
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2 && table.getSelectedRow() != -1) {
+
+                    int row = table.getSelectedRow();
+                    int memberID = Integer.parseInt(
+                            table.getValueAt(row, 0).toString()
+                    );
+
+                    new MemberDetailDialog(
+                            (Frame) SwingUtilities.getWindowAncestor(MemberUI.this),
+                            memberID
+                    ).setVisible(true);
+                }
+            }
+        });
 
         p.add(top, BorderLayout.NORTH);
         p.add(new JScrollPane(table), BorderLayout.CENTER);
@@ -136,7 +159,13 @@ public class MemberUI extends JPanel {
 
     private void fillTable(List<Member> list) {
         DefaultTableModel model = new DefaultTableModel(
-                new String[]{"ID", "Name", "Gender", "Phone", "Join Date"}, 0);
+                new String[]{"ID", "Name", "Gender", "Phone", "Join Date"}, 0
+        ) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // KHÓA EDIT
+            }
+        };
 
         for (Member m : list) {
             model.addRow(new Object[]{
@@ -247,13 +276,15 @@ public class MemberUI extends JPanel {
 
             int memberID = Integer.parseInt(txtID.getText());
 
+            /* ================= 1. CHỌN GÓI TẬP ================= */
+
             int choice = JOptionPane.showConfirmDialog(
                     this,
                     "Bạn có muốn đăng ký gói tập không?",
                     "Đăng ký gói",
                     JOptionPane.YES_NO_OPTION
             );
-            if (choice == JOptionPane.NO_OPTION) return;
+            if (choice != JOptionPane.YES_OPTION) return;
 
             RegisterPackageDialog pkgDialog =
                     new RegisterPackageDialog(
@@ -263,6 +294,11 @@ public class MemberUI extends JPanel {
             pkgDialog.setVisible(true);
 
             if (!pkgDialog.isRegistered()) return;
+            int packageID = pkgDialog.getSelectedPackageID();
+
+            /* ================= 2. CHỌN PT (HUẤN LUYỆN VIÊN) ================= */
+
+            Integer ptServiceID = null;
 
             int choicePT = JOptionPane.showConfirmDialog(
                     this,
@@ -272,22 +308,90 @@ public class MemberUI extends JPanel {
             );
 
             if (choicePT == JOptionPane.YES_OPTION) {
-                RegisterPTDialog ptDialog =
-                        new RegisterPTDialog(
+
+                // 2.1 Chọn huấn luyện viên
+                SelectTrainerDialog trainerDialog =
+                        new SelectTrainerDialog(SwingUtilities.getWindowAncestor(this));
+                trainerDialog.setVisible(true);
+
+                if (!trainerDialog.isSelected()) return;
+                int trainerID = trainerDialog.getSelectedTrainerID();
+
+                // 2.2 Chọn dịch vụ của PT đó
+                SelectPTServiceDialog serviceDialog =
+                        new SelectPTServiceDialog(
                                 SwingUtilities.getWindowAncestor(this),
-                                memberID
+                                trainerID
                         );
-                ptDialog.setVisible(true);
+                serviceDialog.setVisible(true);
+
+                if (!serviceDialog.isSelected()) return;
+                ptServiceID = serviceDialog.getSelectedServiceID();
             }
 
-            JOptionPane.showMessageDialog(this,
-                    "Hoàn tất đăng ký. Tiến hành thanh toán (sẽ làm sau)");
+            /* ================= 3. XÁC NHẬN THANH TOÁN ================= */
+
+            int confirmPay = JOptionPane.showConfirmDialog(
+                    this,
+                    "Nhân viên đã nhận tiền từ hội viên chưa?",
+                    "Xác nhận thanh toán",
+                    JOptionPane.YES_NO_OPTION
+            );
+
+            if (confirmPay != JOptionPane.YES_OPTION) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Chưa xác nhận thanh toán. Giao dịch bị hủy."
+                );
+                return;
+            }
+
+            /* ================= 4. THANH TOÁN ================= */
+
+            ServiceCheckoutBUS checkoutBUS = new ServiceCheckoutBUS();
+
+            int invoiceID = checkoutBUS.checkoutService(
+                    memberID,
+                    packageID,
+                    ptServiceID,
+                    PaymentMethod.CASH
+            );
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Thanh toán thành công!\nMã hóa đơn: #" + invoiceID
+            );
+
+            /* ================= 5. XUẤT HÓA ĐƠN PDF ================= */
+
+            int exportPDF = JOptionPane.showConfirmDialog(
+                    this,
+                    "Bạn có muốn xuất hóa đơn PDF không?",
+                    "Xuất hóa đơn",
+                    JOptionPane.YES_NO_OPTION
+            );
+
+            if (exportPDF == JOptionPane.YES_OPTION) {
+                InvoicePDFExporter.export(invoiceID);
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Xuất hóa đơn PDF thành công!"
+                );
+            }
+
+            /* ================= 6. KẾT THÚC ================= */
 
             loadData();
             clearForm();
 
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, e.getMessage());
+            JOptionPane.showMessageDialog(
+                    this,
+                    e.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE
+            );
         }
     }
 

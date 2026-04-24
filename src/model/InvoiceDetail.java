@@ -7,22 +7,29 @@ public class InvoiceDetail {
 
     private int invoiceDetailID;
     private int invoiceID;
-    private int productID;
+    private String itemType;
+    private int itemID;
     private int quantity;
     private BigDecimal price;
+    private String itemName;
 
     public InvoiceDetail() {
     }
 
-    public InvoiceDetail(int invoiceID, int productID,
-                         int quantity, BigDecimal price) {
+    // ✅ CONSTRUCTOR CHUẨN MỚI
+    public InvoiceDetail(int invoiceID,
+                         String itemType,
+                         int itemID,
+                         int quantity,
+                         BigDecimal price) {
         this.invoiceID = invoiceID;
-        this.productID = productID;
+        this.itemType = itemType;
+        this.itemID = itemID;
         this.quantity = quantity;
         this.price = price;
     }
 
-    // ===== Getter & Setter =====
+    /* ===== GETTER / SETTER ===== */
 
     public int getInvoiceDetailID() {
         return invoiceDetailID;
@@ -40,12 +47,20 @@ public class InvoiceDetail {
         this.invoiceID = invoiceID;
     }
 
-    public int getProductID() {
-        return productID;
+    public String getItemType() {
+        return itemType;
     }
 
-    public void setProductID(int productID) {
-        this.productID = productID;
+    public void setItemType(String itemType) {
+        this.itemType = itemType;
+    }
+
+    public int getItemID() {
+        return itemID;
+    }
+
+    public void setItemID(int itemID) {
+        this.itemID = itemID;
     }
 
     public int getQuantity() {
@@ -55,6 +70,7 @@ public class InvoiceDetail {
     public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
+
     public BigDecimal getPrice() {
         return price;
     }
@@ -63,12 +79,25 @@ public class InvoiceDetail {
         this.price = price;
     }
 
+
+    public String getItemName() {
+        return itemName;
+    }
+
+    public void setItemName(String itemName) {
+        this.itemName = itemName;
+    }
+
+
+    /* ===== OBJECT METHODS ===== */
+
     @Override
     public String toString() {
         return "InvoiceDetail{" +
                 "invoiceDetailID=" + invoiceDetailID +
                 ", invoiceID=" + invoiceID +
-                ", productID=" + productID +
+                ", itemType='" + itemType + '\'' +
+                ", itemID=" + itemID +
                 ", quantity=" + quantity +
                 ", price=" + price +
                 '}';
@@ -87,4 +116,6 @@ public class InvoiceDetail {
     public int hashCode() {
         return Objects.hash(invoiceDetailID);
     }
+
+
 }

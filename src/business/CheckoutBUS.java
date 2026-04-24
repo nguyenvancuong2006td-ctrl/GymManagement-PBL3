@@ -3,10 +3,10 @@ package business;
 import data.InvoiceDAO;
 import data.InvoiceDetailDAO;
 import data.PaymentDAO;
+import data.ProductDAO;
 import model.*;
 import util.DBConnection;
 
-import javax.swing.*;
 import java.sql.Connection;
 
 public class CheckoutBUS {
@@ -14,6 +14,7 @@ public class CheckoutBUS {
     private final InvoiceDAO invoiceDAO = new InvoiceDAO();
     private final InvoiceDetailDAO detailDAO = new InvoiceDetailDAO();
     private final PaymentDAO paymentDAO = new PaymentDAO();
+    private final ProductDAO productDAO = new ProductDAO();
 
     public int checkout(
             CartBUS cartBUS,
@@ -21,11 +22,25 @@ public class CheckoutBUS {
             Member member,
             PaymentMethod method
     ) {
+
+        /* ===== VALIDATE NGHIỆP VỤ ===== */
+        if (staffID <= 0) {
+            throw new IllegalArgumentException("StaffID không hợp lệ");
+        }
+
+        if (member == null) {
+            throw new IllegalArgumentException("Hội viên không hợp lệ");
+        }
+
+        if (cartBUS == null || cartBUS.isEmpty()) {
+            throw new IllegalArgumentException("Giỏ hàng trống");
+        }
+
         try (Connection conn = DBConnection.getConnection()) {
 
             conn.setAutoCommit(false);
 
-            // 1️⃣ Tạo Invoice
+            /* ===== 1. TẠO INVOICE ===== */
             Invoice invoice = new Invoice(
                     cartBUS.getTotalAmount(),
                     staffID,
@@ -34,22 +49,32 @@ public class CheckoutBUS {
 
             int invoiceID = invoiceDAO.insert(invoice, conn);
 
-            // 2️⃣ Tạo InvoiceDetail
+            /* ===== 2. INVOICE DETAIL + TRỪ KHO ===== */
             cartBUS.getItems().forEach((product, qty) -> {
                 try {
+                    // InvoiceDetail dùng itemType + itemID
                     InvoiceDetail d = new InvoiceDetail(
                             invoiceID,
-                            product.getProductID(),
+                            "PRODUCT",                      // itemType
+                            product.getProductID(),          // itemID
                             qty,
                             product.getPrice()
                     );
                     detailDAO.insert(d, conn);
+
+                    //  TRỪ TỒN KHO PRODUCT
+                    productDAO.decreaseStock(
+                            product.getProductID(),
+                            qty,
+                            conn
+                    );
+
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             });
 
-            // 3️⃣ Tạo Payment (DÙNG SETTER – KHÔNG DÙNG CONSTRUCTOR)
+            /* ===== 3. PAYMENT ===== */
             Payment payment = new Payment();
             payment.setAmount(cartBUS.getTotalAmount());
             payment.setPaymentMethod(method.name());
@@ -57,7 +82,7 @@ public class CheckoutBUS {
             payment.setMemberID(member.getMemberID());
             payment.setStaffID(staffID);
             payment.setPackageID(null);
-            payment.setInvoiceID(invoiceID); // ✅ LIÊN KẾT VỚI INVOICE
+            payment.setInvoiceID(invoiceID);
 
             paymentDAO.insert(payment, conn);
 
@@ -68,13 +93,7 @@ public class CheckoutBUS {
 
         } catch (Exception e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(
-                    null,
-                    "Lỗi chi tiết:\n" + e.getMessage(),
-                    "Lỗi thanh toán",
-                    JOptionPane.ERROR_MESSAGE
-            );
-            throw new RuntimeException(e);
+            throw new RuntimeException("Thanh toán thất bại", e);
         }
     }
 }

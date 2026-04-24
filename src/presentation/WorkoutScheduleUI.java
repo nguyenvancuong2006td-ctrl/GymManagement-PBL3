@@ -1,306 +1,257 @@
 package presentation;
 
+import business.MemberPTBUS;
 import business.WorkoutScheduleBUS;
+import model.MemberPTItem;
 import model.WorkoutSchedule;
-import model.Role;
-import util.Session;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
+import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.ZoneId;
+import java.util.Date;
 
 public class WorkoutScheduleUI extends JPanel {
 
-    // ===== FORM =====
-    private JTextField txtID, txtDate, txtStart, txtEnd, txtMemberID, txtTrainerID;
-
-    // ===== TABLE & SEARCH =====
-    private JTable table;
-    private JTextField txtSearch;
-
-    // ===== BUTTON =====
-    private JButton btnAdd, btnUpdate, btnDelete, btnCancel, btnClear;
-
-    private final WorkoutScheduleBUS bus = new WorkoutScheduleBUS();
-    private List<WorkoutSchedule> allSchedules = new ArrayList<>();
-
-    public WorkoutScheduleUI() {
-        setLayout(new BorderLayout(10, 10));
-        setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
-
-        add(createFormPanel(), BorderLayout.NORTH);
-        add(createTablePanel(), BorderLayout.CENTER);
-
-        loadData();
-        applyUiPermission();
-        clearForm();
-    }
+    /* ================= STYLE ================= */
+    private static final Font FONT_NORMAL = new Font("Segoe UI", Font.PLAIN, 13);
+    private static final Font FONT_BOLD   = new Font("Segoe UI", Font.BOLD, 13);
+    private static final Color BG_APP     = new Color(240, 242, 245);
 
     /* ================= FORM ================= */
-
-    private JPanel createFormPanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBorder(BorderFactory.createTitledBorder("Workout Schedule"));
-
-        JPanel form = new JPanel(new GridBagLayout());
-        GridBagConstraints g = new GridBagConstraints();
-        g.insets = new Insets(6, 10, 6, 10);
-        g.fill = GridBagConstraints.HORIZONTAL;
-
-        txtID = field(false);
-        txtDate = field(true);
-        txtStart = field(true);
-        txtEnd = field(true);
-        txtMemberID = field(true);
-        txtTrainerID = field(true);
-
-        g.gridy = 0;
-        addField(form, g, 0, "ID", txtID);
-        addField(form, g, 2, "Date (yyyy-MM-dd)", txtDate);
-
-        g.gridy++;
-        addField(form, g, 0, "Start (HH:mm)", txtStart);
-        addField(form, g, 2, "End (HH:mm)", txtEnd);
-
-        g.gridy++;
-        addField(form, g, 0, "Member ID", txtMemberID);
-        addField(form, g, 2, "Trainer ID", txtTrainerID);
-
-        panel.add(form, BorderLayout.CENTER);
-        panel.add(createButtonPanel(), BorderLayout.SOUTH);
-        return panel;
-    }
-
-    private void addField(JPanel p, GridBagConstraints g, int x, String label, JTextField field) {
-        g.gridx = x;
-        p.add(new JLabel(label + ":"), g);
-        g.gridx = x + 1;
-        field.setPreferredSize(new Dimension(150, 28));
-        p.add(field, g);
-    }
-
-    private JPanel createButtonPanel() {
-        JPanel p = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 6));
-
-        btnAdd = btn("Add", new Color(76, 175, 80));
-        btnUpdate = btn("Update", new Color(255, 152, 0));
-        btnDelete = btn("Delete", new Color(220, 80, 80));
-        btnCancel = btn("Cancel", new Color(120, 120, 120));
-        btnClear = btn("Clear", new Color(160, 160, 160));
-
-        btnAdd.addActionListener(e -> addSchedule());
-        btnUpdate.addActionListener(e -> updateSchedule());
-        btnDelete.addActionListener(e -> deleteSchedule());
-        btnCancel.addActionListener(e -> cancelSchedule());
-        btnClear.addActionListener(e -> clearForm());
-
-        p.add(btnAdd);
-        p.add(btnUpdate);
-        p.add(btnDelete);
-        p.add(btnCancel);
-        p.add(btnClear);
-        return p;
-    }
+    private final JSpinner spDate;
+    private final JSpinner spStart;
+    private final JSpinner spEnd;
+    private final JComboBox<MemberPTItem> cboMemberPT;
 
     /* ================= TABLE ================= */
+    private final JTable tblSchedule;
+    private final DefaultTableModel tblModel;
 
-    private JPanel createTablePanel() {
-        JPanel p = new JPanel(new BorderLayout(6, 6));
-        p.setBorder(BorderFactory.createTitledBorder("Schedule List"));
+    private final MemberPTBUS memberPTBUS = new MemberPTBUS();
+    private final WorkoutScheduleBUS scheduleBUS = new WorkoutScheduleBUS();
 
-        txtSearch = new JTextField();
-        txtSearch.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) { filter(); }
-            public void removeUpdate(DocumentEvent e) { filter(); }
-            public void changedUpdate(DocumentEvent e) { filter(); }
-        });
+    public WorkoutScheduleUI() {
 
-        JPanel top = new JPanel(new BorderLayout(5, 0));
-        top.add(new JLabel("Search:"), BorderLayout.WEST);
-        top.add(txtSearch, BorderLayout.CENTER);
+        setLayout(new BorderLayout(15, 15));
+        setBackground(BG_APP);
+        setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        table = new JTable();
-        table.setRowHeight(26);
-        table.getSelectionModel().addListSelectionListener(e -> fillForm());
+        applyGlobalStyle();
 
-        p.add(top, BorderLayout.NORTH);
-        p.add(new JScrollPane(table), BorderLayout.CENTER);
+        /* ================= TITLE ================= */
+        JLabel title = new JLabel("QUẢN LÝ LỊCH TẬP PT");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        add(title, BorderLayout.NORTH);
+
+        /* ================= FORM CARD ================= */
+        JPanel formCard = createCard("Đăng ký lịch mới");
+        formCard.setPreferredSize(new Dimension(360, 0));
+        formCard.setLayout(new GridBagLayout());
+
+        GridBagConstraints g = new GridBagConstraints();
+        g.insets = new Insets(10, 12, 10, 12);
+        g.fill = GridBagConstraints.HORIZONTAL;
+
+        spDate = createDateSpinner("yyyy-MM-dd");
+        spStart = createDateSpinner("HH:mm");
+        spEnd = createDateSpinner("HH:mm");
+
+        cboMemberPT = new JComboBox<>();
+        cboMemberPT.setPreferredSize(new Dimension(220, 28));
+        loadMemberPT();
+
+        int y = 0;
+
+        addFormRow(formCard, g, y++, "Ngày tập", spDate);
+        addFormRow(formCard, g, y++, "Giờ bắt đầu", spStart);
+        addFormRow(formCard, g, y++, "Giờ kết thúc", spEnd);
+        addFormRow(formCard, g, y++, "Hội viên (PT)", cboMemberPT);
+
+        JButton btnAdd = primaryButton("ĐĂNG KÝ LỊCH");
+        btnAdd.addActionListener(e -> addSchedule());
+
+        g.gridx = 1;
+        g.gridy = y;
+        g.anchor = GridBagConstraints.EAST;
+        formCard.add(btnAdd, g);
+
+        /* ================= TABLE CARD ================= */
+        JPanel tableCard = createCard("Danh sách lịch tập");
+        tableCard.setLayout(new BorderLayout(8, 8));
+
+        tblModel = new DefaultTableModel(
+                new String[]{"Ngày", "Bắt đầu", "Kết thúc", "Hội viên", "PT", "Trạng thái"}, 0
+        ) {
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
+        };
+
+        tblSchedule = new JTable(tblModel);
+        tblSchedule.setRowHeight(28);
+        styleTable(tblSchedule);
+
+        loadTable();
+
+        tableCard.add(new JScrollPane(tblSchedule), BorderLayout.CENTER);
+
+        /* ================= CENTER ================= */
+        JPanel center = new JPanel(new BorderLayout(12, 12));
+        center.setOpaque(false);
+        center.add(formCard, BorderLayout.WEST);
+        center.add(tableCard, BorderLayout.CENTER);
+
+        add(center, BorderLayout.CENTER);
+    }
+
+    /* ================= UI STYLE ================= */
+
+    private void applyGlobalStyle() {
+        UIManager.put("Label.font", FONT_NORMAL);
+        UIManager.put("TextField.font", FONT_NORMAL);
+        UIManager.put("Spinner.font", FONT_NORMAL);
+        UIManager.put("ComboBox.font", FONT_NORMAL);
+        UIManager.put("Button.font", FONT_BOLD);
+        UIManager.put("Table.font", FONT_NORMAL);
+        UIManager.put("TableHeader.font", FONT_BOLD);
+    }
+
+    private JPanel createCard(String title) {
+        JPanel p = new JPanel();
+        p.setBackground(Color.WHITE);
+
+        TitledBorder t = BorderFactory.createTitledBorder(title);
+        t.setTitleFont(FONT_BOLD);
+        t.setTitleColor(new Color(60, 60, 60));
+
+        p.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 220, 220)),
+                BorderFactory.createEmptyBorder(12, 12, 12, 12)
+        ));
+        p.setBorder(t);
         return p;
+    }
+
+    private JButton primaryButton(String text) {
+        JButton b = new JButton(text);
+        b.setBackground(new Color(52, 120, 208));
+        b.setForeground(Color.WHITE);
+        b.setFocusPainted(false);
+        b.setPreferredSize(new Dimension(160, 32));
+        return b;
+    }
+
+    private void addFormRow(JPanel panel, GridBagConstraints g,
+                            int y, String label, JComponent field) {
+
+        g.gridy = y;
+        g.gridx = 0;
+        g.weightx = 0;
+        panel.add(new JLabel(label + ":"), g);
+
+        g.gridx = 1;
+        g.weightx = 1;
+        panel.add(field, g);
+    }
+
+    private JSpinner createDateSpinner(String format) {
+        JSpinner s = new JSpinner(new SpinnerDateModel());
+        s.setEditor(new JSpinner.DateEditor(s, format));
+        s.setPreferredSize(new Dimension(220, 28));
+        return s;
+    }
+
+    private void styleTable(JTable table) {
+        table.getTableHeader().setBackground(new Color(245, 246, 248));
+        table.getTableHeader().setForeground(new Color(60, 60, 60));
+        table.setGridColor(new Color(230, 230, 230));
+
+        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(
+                    JTable table, Object value, boolean isSelected,
+                    boolean hasFocus, int row, int column) {
+
+                Component c = super.getTableCellRendererComponent(
+                        table, value, isSelected, hasFocus, row, column);
+
+                if (!isSelected) {
+                    c.setBackground(row % 2 == 0
+                            ? Color.WHITE
+                            : new Color(248, 248, 248));
+                }
+                return c;
+            }
+        });
     }
 
     /* ================= DATA ================= */
 
-    private void loadData() {
-        allSchedules = bus.getAll();
-        fillTable(allSchedules);
+    private void loadMemberPT() {
+        cboMemberPT.removeAllItems();
+        memberPTBUS.getActiveMemberPTItems().forEach(cboMemberPT::addItem);
     }
 
-    private void fillTable(List<WorkoutSchedule> list) {
-        DefaultTableModel model = new DefaultTableModel(
-                new String[]{"ID", "Date", "Start", "End", "Member", "Trainer", "Status"}, 0
-        );
-
-        for (WorkoutSchedule w : list) {
-            model.addRow(new Object[]{
-                    w.getScheduleID(),
-                    w.getDate(),
-                    w.getStartTime(),
-                    w.getEndTime(),
-                    w.getMemberID(),
-                    w.getTrainerID(),
-                    w.getStatus()
-            });
+    private void loadTable() {
+        tblModel.setRowCount(0);
+        for (Object[] row : scheduleBUS.loadTable()) {
+            tblModel.addRow(row);
         }
-
-        table.setModel(model);
-        colorizeStatus();
     }
 
-    private void colorizeStatus() {
-        table.getColumnModel().getColumn(6).setCellRenderer(
-                new DefaultTableCellRenderer() {
-                    @Override
-                    public Component getTableCellRendererComponent(
-                            JTable table, Object value, boolean isSelected,
-                            boolean hasFocus, int row, int column) {
-
-                        Component c = super.getTableCellRendererComponent(
-                                table, value, isSelected, hasFocus, row, column);
-
-                        if (!isSelected) {
-                            String s = value == null ? "" : value.toString();
-                            if ("BOOKED".equals(s)) c.setForeground(new Color(33, 150, 243));
-                            else if ("COMPLETED".equals(s)) c.setForeground(new Color(76, 175, 80));
-                            else if ("CANCELLED".equals(s)) c.setForeground(new Color(220, 80, 80));
-                            else c.setForeground(Color.DARK_GRAY);
-                        }
-                        return c;
-                    }
-                });
-    }
-
-    /* ================= FILTER ================= */
-
-    private void filter() {
-        String key = txtSearch.getText().trim().toLowerCase();
-        List<WorkoutSchedule> rs = new ArrayList<>();
-
-        for (WorkoutSchedule w : allSchedules) {
-            if (String.valueOf(w.getMemberID()).contains(key)
-                    || String.valueOf(w.getTrainerID()).contains(key)
-                    || (w.getStatus() != null && w.getStatus().toLowerCase().contains(key))) {
-                rs.add(w);
-            }
-        }
-        fillTable(rs);
-    }
-
-    /* ================= CRUD ================= */
-
-    private WorkoutSchedule getFormData() {
-        WorkoutSchedule w = new WorkoutSchedule();
-        if (!txtID.getText().isEmpty())
-            w.setScheduleID(Integer.parseInt(txtID.getText()));
-
-        w.setDate(LocalDate.parse(txtDate.getText()));
-        w.setStartTime(LocalTime.parse(txtStart.getText()));
-        w.setEndTime(LocalTime.parse(txtEnd.getText()));
-        w.setMemberID(Integer.parseInt(txtMemberID.getText()));
-        w.setTrainerID(Integer.parseInt(txtTrainerID.getText()));
-        return w;
-    }
+    /* ================= ACTION (KHÔNG ĐỔI) ================= */
 
     private void addSchedule() {
-        bus.add(getFormData());
-        loadData();
-        clearForm();
-    }
 
-    private void updateSchedule() {
-        bus.update(getFormData());
-        loadData();
-        clearForm();
-    }
+        MemberPTItem item = (MemberPTItem) cboMemberPT.getSelectedItem();
+        if (item == null) return;
 
-    private void deleteSchedule() {
-        bus.delete(Integer.parseInt(txtID.getText()));
-        loadData();
-        clearForm();
-    }
+        LocalDate date =
+                new java.sql.Date(((Date) spDate.getValue()).getTime())
+                        .toLocalDate();
 
-    private void cancelSchedule() {
-        int r = table.getSelectedRow();
-        if (r < 0) return;
+        LocalTime start =
+                ((Date) spStart.getValue()).toInstant()
+                        .atZone(ZoneId.systemDefault()).toLocalTime();
 
-        WorkoutSchedule w = new WorkoutSchedule();
-        w.setScheduleID(Integer.parseInt(table.getValueAt(r, 0).toString()));
-        w.setMemberID(Integer.parseInt(table.getValueAt(r, 4).toString()));
-        w.setStatus(table.getValueAt(r, 6).toString());
+        LocalTime end =
+                ((Date) spEnd.getValue()).toInstant()
+                        .atZone(ZoneId.systemDefault()).toLocalTime();
 
-        bus.cancel(w);
-        loadData();
-        clearForm();
-    }
+        if (!end.isAfter(start)) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Giờ kết thúc phải sau giờ bắt đầu",
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
 
-    private void fillForm() {
-        int r = table.getSelectedRow();
-        if (r < 0) return;
+        WorkoutSchedule ws = new WorkoutSchedule();
+        ws.setDate(date);
+        ws.setStartTime(start);
+        ws.setEndTime(end);
+        ws.setMemberPTID(item.getMemberPTID());
+        ws.setTrainerID(item.getTrainerID());
 
-        txtID.setText(table.getValueAt(r, 0).toString());
-        txtDate.setText(table.getValueAt(r, 1).toString());
-        txtStart.setText(table.getValueAt(r, 2).toString());
-        txtEnd.setText(table.getValueAt(r, 3).toString());
-        txtMemberID.setText(table.getValueAt(r, 4).toString());
-        txtTrainerID.setText(table.getValueAt(r, 5).toString());
-
-        boolean editable = "BOOKED".equals(table.getValueAt(r, 6).toString());
-        btnUpdate.setEnabled(editable);
-        btnDelete.setEnabled(editable);
-        btnCancel.setEnabled(editable);
-    }
-
-    private void clearForm() {
-        txtID.setText("");
-        txtDate.setText("");
-        txtStart.setText("");
-        txtEnd.setText("");
-        txtMemberID.setText("");
-        txtTrainerID.setText("");
-        table.clearSelection();
-
-        btnUpdate.setEnabled(false);
-        btnDelete.setEnabled(false);
-        btnCancel.setEnabled(false);
-    }
-
-    /* ================= PERMISSION ================= */
-
-    private void applyUiPermission() {
-        boolean isAdmin = Session.getRole() == Role.Admin;
-        btnUpdate.setVisible(isAdmin);
-        btnDelete.setVisible(isAdmin);
-        btnCancel.setVisible(isAdmin);
-    }
-
-    /* ================= HELPERS ================= */
-
-    private JTextField field(boolean enable) {
-        JTextField f = new JTextField();
-        f.setEnabled(enable);
-        return f;
-    }
-
-    private JButton btn(String t, Color c) {
-        JButton b = new JButton(t);
-        b.setBackground(c);
-        b.setForeground(Color.WHITE);
-        return b;
+        try {
+            scheduleBUS.register(ws);
+            loadTable();
+            JOptionPane.showMessageDialog(this, "Đăng ký lịch thành công");
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    ex.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
     }
 }

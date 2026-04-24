@@ -97,4 +97,27 @@ public class MembershipPackageDAO {
             throw new RuntimeException(e);
         }
     }
+
+    public String getNameByID(int packageID) {
+
+        String sql = "SELECT packageName FROM MembershipPackage WHERE packageID = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, packageID);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("packageName");
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Không lấy được tên gói tập", e);
+        }
+
+        return "Không xác định";
+    }
+
 }

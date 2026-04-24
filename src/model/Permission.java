@@ -29,6 +29,12 @@ public enum Permission {
     TRAINER_UPDATE,
     TRAINER_DELETE,
 
+    //PTService
+    PTService_VIEW,
+    PTService_ADD,
+    PTService_UPDATE,
+    PTService_DELETE,
+
     // Schedule
     SCHEDULE_VIEW,
     SCHEDULE_ADD,

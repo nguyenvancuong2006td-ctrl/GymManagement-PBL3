@@ -149,4 +149,61 @@ public class InvoiceDAO {
 
         return BigDecimal.ZERO;
     }
+
+    /* ================= GET BY MEMBER ================= */
+
+    public List<Invoice> getByMember(int memberID) {
+
+        List<Invoice> list = new ArrayList<>();
+
+        String sql = """
+            SELECT
+                i.invoiceID,
+                i.invoiceDate,
+                i.totalAmount,
+                i.staffID,
+                i.memberID,
+                s.fullName AS staffName
+            FROM Invoice i
+            LEFT JOIN Staff s
+                ON i.staffID = s.staffID
+            WHERE i.memberID = ?
+            ORDER BY i.invoiceDate DESC
+        """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, memberID);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+
+                    Invoice invoice = new Invoice();
+
+                    invoice.setInvoiceID(rs.getInt("invoiceID"));
+
+                    Timestamp ts = rs.getTimestamp("invoiceDate");
+                    invoice.setInvoiceDate(
+                            ts != null ? ts.toLocalDateTime() : null
+                    );
+
+                    invoice.setTotalAmount(rs.getBigDecimal("totalAmount"));
+                    invoice.setStaffID(rs.getInt("staffID"));
+                    invoice.setMemberID(rs.getInt("memberID"));
+                    invoice.setStaffName(rs.getString("staffName"));
+
+                    list.add(invoice);
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Không thể lấy hóa đơn của hội viên ID = " + memberID,
+                    e
+            );
+        }
+
+        return list;
+    }
 }

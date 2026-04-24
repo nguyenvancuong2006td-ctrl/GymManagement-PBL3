@@ -16,6 +16,7 @@ public class RegisterPackageDialog extends JDialog {
 
     private boolean registered = false;
     private final int memberID;
+    private int selectedPackageID = -1;
 
     public RegisterPackageDialog(Window owner, int memberID) {
         super(owner, "Đăng ký gói tập", ModalityType.APPLICATION_MODAL);
@@ -98,13 +99,19 @@ public class RegisterPackageDialog extends JDialog {
 
             new MemberPackageBUS().registerPackage(memberID, packageID);
 
+            // ✅ QUAN TRỌNG
+            selectedPackageID = packageID;
             registered = true;
-            JOptionPane.showMessageDialog(this, "Đăng ký gói tập thành công");
+
             dispose();
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, e.getMessage());
         }
+    }
+
+    public int getSelectedPackageID() {
+        return selectedPackageID;
     }
 
     public boolean isRegistered() {

@@ -22,6 +22,9 @@ public enum Role {
             Permission.TRAINER_ADD,
             Permission.TRAINER_UPDATE,
 
+            //PTService
+//            Permission.PTService_VIEW,
+
             // Schedule
             Permission.SCHEDULE_VIEW,
             Permission.SCHEDULE_ADD,
@@ -30,7 +33,7 @@ public enum Role {
             // Package
             Permission.PACKAGE_VIEW,
 
-            // Product / Sales
+            // Product
             Permission.PRODUCT_SHOP_VIEW,
 
             // Payment / Invoice

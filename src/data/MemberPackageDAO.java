@@ -4,7 +4,6 @@ import model.MemberPackage;
 import util.DBConnection;
 
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,8 +13,8 @@ public class MemberPackageDAO {
     public boolean insert(MemberPackage mp) {
         String sql = """
             INSERT INTO MemberPackage
-            (memberID, packageID, startDate, endDate, status, invoiceID)
-            VALUES (?, ?, ?, ?, ?, ?)
+            (memberID, packageID, startDate, endDate, status)
+            VALUES (?, ?, ?, ?, ?)
         """;
 
         try (Connection c = DBConnection.getConnection();
@@ -26,10 +25,11 @@ public class MemberPackageDAO {
             ps.setDate(3, Date.valueOf(mp.getStartDate()));
             ps.setDate(4, Date.valueOf(mp.getEndDate()));
             ps.setString(5, mp.getStatus());
-            ps.setInt(6, mp.getInvoiceID());
 
             return ps.executeUpdate() > 0;
+
         } catch (SQLException e) {
+            e.printStackTrace();
             throw new RuntimeException("Insert MemberPackage failed", e);
         }
     }
@@ -52,14 +52,14 @@ public class MemberPackageDAO {
             ResultSet rs = ps.executeQuery();
 
             if (!rs.next()) return null;
-
             return map(rs);
+
         } catch (SQLException e) {
             throw new RuntimeException("Get active MemberPackage failed", e);
         }
     }
 
-    /* ================= GET ALL BY MEMBER (LỊCH SỬ) ================= */
+    /* ================= GET ALL BY MEMBER ================= */
     public List<MemberPackage> getAllByMember(int memberID) {
         List<MemberPackage> list = new ArrayList<>();
         String sql = """
@@ -93,7 +93,6 @@ public class MemberPackageDAO {
         mp.setStartDate(rs.getDate("startDate").toLocalDate());
         mp.setEndDate(rs.getDate("endDate").toLocalDate());
         mp.setStatus(rs.getString("status"));
-        mp.setInvoiceID(rs.getInt("invoiceID"));
         return mp;
     }
 }

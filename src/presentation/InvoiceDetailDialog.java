@@ -1,6 +1,9 @@
 package presentation;
 
 import business.InvoiceBUS;
+import data.MembershipPackageDAO;
+import data.ProductDAO;
+import data.PTServiceDAO;
 import model.InvoiceDetail;
 import model.Payment;
 
@@ -14,6 +17,11 @@ import java.util.List;
 public class InvoiceDetailDialog extends JDialog {
 
     private final InvoiceBUS bus = new InvoiceBUS();
+
+    // ✅ DAO để lấy tên item
+    private final ProductDAO productDAO = new ProductDAO();
+    private final MembershipPackageDAO packageDAO = new MembershipPackageDAO();
+    private final PTServiceDAO ptServiceDAO = new PTServiceDAO();
 
     public InvoiceDetailDialog(JFrame parent, int invoiceID) {
         super(parent, "Chi tiết hóa đơn #" + invoiceID, true);
@@ -50,9 +58,8 @@ public class InvoiceDetailDialog extends JDialog {
     private JPanel createCenter(int invoiceID) {
         JPanel center = new JPanel(new BorderLayout(10, 10));
 
-        /* ===== TABLE SẢN PHẨM ===== */
         DefaultTableModel model = new DefaultTableModel(
-                new String[]{"STT", "Tên sản phẩm", "Số lượng", "Đơn giá", "Thành tiền"}, 0
+                new String[]{"STT", "Tên dịch vụ / sản phẩm", "Số lượng", "Đơn giá", "Thành tiền"}, 0
         );
 
         JTable table = new JTable(model);
@@ -66,13 +73,15 @@ public class InvoiceDetailDialog extends JDialog {
         BigDecimal total = BigDecimal.ZERO;
 
         for (InvoiceDetail d : details) {
+
+            String itemName = getItemName(d);
             BigDecimal lineTotal =
                     d.getPrice().multiply(BigDecimal.valueOf(d.getQuantity()));
             total = total.add(lineTotal);
 
             model.addRow(new Object[]{
                     stt++,
-                    bus.getProductName(d.getProductID()),
+                    itemName,
                     d.getQuantity(),
                     formatMoney(d.getPrice()),
                     formatMoney(lineTotal)
@@ -81,10 +90,26 @@ public class InvoiceDetailDialog extends JDialog {
 
         center.add(new JScrollPane(table), BorderLayout.CENTER);
 
-        /* ===== PAYMENT ===== */
         center.add(createPaymentPanel(invoiceID), BorderLayout.SOUTH);
-
         return center;
+    }
+
+    /* ================= ITEM NAME ================= */
+    private String getItemName(InvoiceDetail d) {
+
+        switch (d.getItemType()) {
+            case "PRODUCT":
+                return productDAO.getNameByID(d.getItemID());
+
+            case "PACKAGE":
+                return packageDAO.getNameByID(d.getItemID());
+
+            case "PT":
+                return ptServiceDAO.getNameByID(d.getItemID());
+
+            default:
+                return "Không xác định";
+        }
     }
 
     /* ================= PAYMENT INFO ================= */

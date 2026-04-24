@@ -2,9 +2,12 @@ package presentation;
 
 import business.CartBUS;
 import business.CheckoutBUS;
+import data.StaffDAO;
 import model.Member;
 import model.PaymentMethod;
 import model.Product;
+import model.Role;
+import model.Staff;
 import util.InvoicePDFExporter;
 import util.Session;
 
@@ -57,7 +60,7 @@ public class CartUI extends JDialog {
 
         // ===== FOOTER =====
         JPanel footer = new JPanel(new BorderLayout(10, 10));
-        footer.setBorder(BorderFactory.createEmptyBorder(15,15,15,15));
+        footer.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
         lblTotal = new JLabel("Tổng tiền: 0 ₫");
         lblTotal.setFont(new Font("Segoe UI", Font.BOLD, 18));
@@ -85,7 +88,7 @@ public class CartUI extends JDialog {
         if (cartBUS.isEmpty()) {
             JLabel empty = new JLabel("Giỏ hàng trống", SwingConstants.CENTER);
             empty.setFont(new Font("Segoe UI", Font.ITALIC, 14));
-            empty.setBorder(BorderFactory.createEmptyBorder(50,0,0,0));
+            empty.setBorder(BorderFactory.createEmptyBorder(50, 0, 0, 0));
             listPanel.add(empty);
             btnCheckout.setEnabled(false);
         } else {
@@ -108,8 +111,8 @@ public class CartUI extends JDialog {
         JPanel card = new JPanel(new BorderLayout(10, 10));
         card.setBackground(Color.WHITE);
         card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220,220,220)),
-                BorderFactory.createEmptyBorder(10,12,10,12)
+                BorderFactory.createLineBorder(new Color(220, 220, 220)),
+                BorderFactory.createEmptyBorder(10, 12, 10, 12)
         ));
         card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
 
@@ -142,17 +145,41 @@ public class CartUI extends JDialog {
 
         if (cartBUS.isEmpty()) return;
 
-        // Chọn hội viên
-        Member member = MemberSelectDialog.showDialog(this);
-        if (member == null) {
-            JOptionPane.showMessageDialog(this,
-                    "Vui lòng chọn hội viên!",
-                    "Thiếu thông tin",
-                    JOptionPane.WARNING_MESSAGE);
+        // ===== LẤY STAFF THEO ACCOUNT (ADMIN & STAFF ĐỀU GIỐNG NHAU) =====
+        StaffDAO staffDAO = new StaffDAO();
+        Staff staff;
+
+        try {
+            staff = staffDAO.getByAccountID(Session.getAccountID());
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Không lấy được thông tin người xử lý!",
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE
+            );
             return;
         }
 
-        //  Chọn phương thức thanh toán
+        if (staff == null) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Tài khoản này chưa được gán nhân viên.\n"
+                            + "Không thể thực hiện thanh toán.",
+                    "Không hợp lệ",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        int staffID = staff.getStaffID();
+        String staffName = staff.getFullName();
+
+        // ===== CHỌN HỘI VIÊN =====
+        Member member = MemberSelectDialog.showDialog(this);
+        if (member == null) return;
+
+        // ===== CHỌN PHƯƠNG THỨC =====
         PaymentMethod method = (PaymentMethod) JOptionPane.showInputDialog(
                 this,
                 "Chọn phương thức thanh toán:",
@@ -162,15 +189,15 @@ public class CartUI extends JDialog {
                 PaymentMethod.values(),
                 PaymentMethod.CASH
         );
-
         if (method == null) return;
 
-        // 3️Xác nhận
+        // ===== XÁC NHẬN =====
         int confirm = JOptionPane.showConfirmDialog(
                 this,
-                "Hội viên: " + member.getFullName() +
-                        "\nPhương thức: " + method +
-                        "\nTổng tiền: " + formatMoney(cartBUS.getTotalAmount()),
+                "Người xử lý: " + staffName
+                        + "\nHội viên: " + member.getFullName()
+                        + "\nPhương thức: " + method
+                        + "\nTổng tiền: " + formatMoney(cartBUS.getTotalAmount()),
                 "Xác nhận thanh toán",
                 JOptionPane.YES_NO_OPTION
         );
@@ -178,9 +205,6 @@ public class CartUI extends JDialog {
         if (confirm != JOptionPane.YES_OPTION) return;
 
         try {
-            int staffID = Session.getCurrentUser().getAccountID();
-
-            // THANH TOÁN – LƯU DB
             int invoiceID = checkoutBUS.checkout(
                     cartBUS,
                     staffID,
@@ -188,12 +212,13 @@ public class CartUI extends JDialog {
                     method
             );
 
-            JOptionPane.showMessageDialog(this,
+            JOptionPane.showMessageDialog(
+                    this,
                     "Thanh toán thành công!",
                     "Thành công",
-                    JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.INFORMATION_MESSAGE
+            );
 
-            //  HỎI XUẤT PDF
             int opt = JOptionPane.showConfirmDialog(
                     this,
                     "Bạn có muốn xuất hóa đơn PDF không?",
@@ -207,12 +232,16 @@ public class CartUI extends JDialog {
 
             dispose();
 
+
+            dispose();
+
         } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this,
+            JOptionPane.showMessageDialog(
+                    this,
                     "Lỗi thanh toán:\n" + e.getMessage(),
                     "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.ERROR_MESSAGE
+            );
         }
     }
 
@@ -220,7 +249,7 @@ public class CartUI extends JDialog {
 
     private String formatMoney(BigDecimal value) {
         return NumberFormat
-                .getCurrencyInstance(new Locale("vi","VN"))
+                .getCurrencyInstance(new Locale("vi", "VN"))
                 .format(value);
     }
 }

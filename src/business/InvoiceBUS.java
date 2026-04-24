@@ -41,7 +41,7 @@ public class InvoiceBUS {
 
     public List<InvoiceDetail> getInvoiceDetails(int invoiceID) {
         try {
-            return detailDAO.getByInvoiceID(invoiceID);
+            return detailDAO.getByInvoice(invoiceID);
         } catch (Exception e) {
             throw new RuntimeException("Không tải được chi tiết hóa đơn", e);
         }

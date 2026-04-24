@@ -86,6 +86,7 @@ public class PaymentManagementUI extends JPanel {
         model = new DefaultTableModel(
                 new String[]{"Mã hóa đơn", "Ngày lập", "Nhân viên", "Tổng tiền"}, 0
         ) {
+            @Override
             public boolean isCellEditable(int r, int c) {
                 return false;
             }
@@ -115,7 +116,34 @@ public class PaymentManagementUI extends JPanel {
 
     private void loadData() {
         allInvoices = invoiceBUS.getAllInvoices();
+        initDefaultDateRange();   // ✅ SET NGÀY MẶC ĐỊNH THÔNG MINH
         filterAndShow();
+    }
+
+    /**
+     * Từ ngày = ngày tạo hóa đơn đầu tiên
+     * Đến ngày = hôm nay
+     */
+    private void initDefaultDateRange() {
+
+        if (allInvoices.isEmpty()) {
+            Date now = new Date();
+            spFromDate.setValue(now);
+            spToDate.setValue(now);
+            return;
+        }
+
+        Date minDate = allInvoices.stream()
+                .map(i -> Date.from(
+                        i.getInvoiceDate()
+                                .atZone(ZoneId.systemDefault())
+                                .toInstant()
+                ))
+                .min(Date::compareTo)
+                .orElse(new Date());
+
+        spFromDate.setValue(minDate);
+        spToDate.setValue(new Date());
     }
 
     private void filterAndShow() {

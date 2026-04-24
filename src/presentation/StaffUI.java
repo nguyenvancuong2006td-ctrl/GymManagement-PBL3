@@ -10,6 +10,7 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.time.LocalDate;
@@ -18,19 +19,22 @@ import java.util.List;
 
 public class StaffUI extends JPanel {
 
-    // ===== ACCOUNT =====
+    /* ===== FONT & COLOR ===== */
+    private static final Font FONT_NORMAL = new Font("Segoe UI", Font.PLAIN, 13);
+    private static final Font FONT_BOLD = new Font("Segoe UI", Font.BOLD, 13);
+
+    /* ===== ACCOUNT ===== */
     private JTextField txtUsername, txtAccountID;
     private JPasswordField txtPassword;
     private JComboBox<String> cbRole;
 
-    // ===== STAFF =====
+    /* ===== STAFF ===== */
     private JTextField txtStaffID, txtName, txtPhone, txtSalary;
     private JComboBox<String> cbGender;
 
-    // ===== TABLE & SEARCH =====
+    /* ===== TABLE & SEARCH ===== */
     private JTable table;
     private JTextField txtSearch;
-
 
     private List<StaffAccount> allStaff = new ArrayList<>();
 
@@ -44,11 +48,25 @@ public class StaffUI extends JPanel {
         setBackground(new Color(240, 242, 245));
         setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
+        applyGlobalStyle();
+
         add(createTopForm(), BorderLayout.NORTH);
         add(createTablePanel(), BorderLayout.CENTER);
 
         lockStaff(true);
         loadStaffTable("");
+    }
+
+    /* ================= GLOBAL STYLE ================= */
+
+    private void applyGlobalStyle() {
+        UIManager.put("Label.font", FONT_NORMAL);
+        UIManager.put("TextField.font", FONT_NORMAL);
+        UIManager.put("PasswordField.font", FONT_NORMAL);
+        UIManager.put("ComboBox.font", FONT_NORMAL);
+        UIManager.put("Button.font", FONT_BOLD);
+        UIManager.put("Table.font", FONT_NORMAL);
+        UIManager.put("TableHeader.font", FONT_BOLD);
     }
 
     /* ================= TOP FORM ================= */
@@ -68,7 +86,7 @@ public class StaffUI extends JPanel {
 
         txtUsername = new JTextField();
         txtPassword = new JPasswordField();
-        cbRole = new JComboBox<>(new String[]{"Staff"});
+        cbRole = new JComboBox<>(new String[]{"Staff", "Admin"});
         txtAccountID = new JTextField();
         txtAccountID.setEditable(false);
 
@@ -85,6 +103,7 @@ public class StaffUI extends JPanel {
 
         g.gridx = 1;
         g.gridy = 4;
+        g.anchor = GridBagConstraints.EAST;
         p.add(btnCreate, g);
 
         return p;
@@ -135,7 +154,7 @@ public class StaffUI extends JPanel {
         return p;
     }
 
-    /* ================= TABLE + SEARCH ================= */
+    /* ================= TABLE PANEL ================= */
 
     private JPanel createTablePanel() {
         JPanel wrapper = new JPanel(new BorderLayout(8, 8));
@@ -152,18 +171,48 @@ public class StaffUI extends JPanel {
         });
 
         JPanel searchPanel = new JPanel(new BorderLayout(5, 0));
+        searchPanel.setOpaque(false);
         searchPanel.add(new JLabel("Search:"), BorderLayout.WEST);
         searchPanel.add(txtSearch, BorderLayout.CENTER);
 
         table = new JTable();
-        table.setRowHeight(26);
+        table.setRowHeight(28);
         table.getSelectionModel().addListSelectionListener(e -> fillFormFromTable());
+
+        styleTable(table);
 
         card.add(searchPanel, BorderLayout.NORTH);
         card.add(new JScrollPane(table), BorderLayout.CENTER);
 
         wrapper.add(card, BorderLayout.CENTER);
         return wrapper;
+    }
+
+    /* ================= TABLE STYLE ================= */
+
+    private void styleTable(JTable table) {
+        table.getTableHeader().setBackground(new Color(245, 246, 248));
+        table.getTableHeader().setForeground(new Color(60, 60, 60));
+        table.setGridColor(new Color(230, 230, 230));
+
+        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(
+                    JTable table, Object value,
+                    boolean isSelected, boolean hasFocus,
+                    int row, int column) {
+
+                Component c = super.getTableCellRendererComponent(
+                        table, value, isSelected, hasFocus, row, column);
+
+                if (!isSelected) {
+                    c.setBackground(row % 2 == 0
+                            ? Color.WHITE
+                            : new Color(248, 248, 248));
+                }
+                return c;
+            }
+        });
     }
 
     /* ================= DATA ================= */
@@ -176,13 +225,8 @@ public class StaffUI extends JPanel {
     private void filterTable(String keyword) {
         DefaultTableModel m = new DefaultTableModel(
                 new String[]{
-                        "Staff ID",
-                        "Name",
-                        "Gender",
-                        "Phone",
-                        "Salary",
-                        "Username",
-                        "Password"
+                        "Staff ID", "Name", "Gender", "Phone",
+                        "Salary", "Username", "Password"
                 }, 0
         );
 
@@ -221,7 +265,7 @@ public class StaffUI extends JPanel {
         lockStaff(false);
     }
 
-    /* ================= CRUD ================= */
+    /* ================= CRUD (KHÔNG ĐỔI LOGIC) ================= */
 
     private void createAccount() {
         try {
@@ -302,24 +346,24 @@ public class StaffUI extends JPanel {
         lockStaff(true);
     }
 
-    /* ================= UI HELPERS ================= */
+    /* ================= UI HELPER ================= */
 
     private JPanel createCard(String title) {
         JPanel p = new JPanel();
         p.setBackground(Color.WHITE);
-        p.setBorder(BorderFactory.createTitledBorder(
+        TitledBorder t = BorderFactory.createTitledBorder(title);
+        t.setTitleFont(new Font("Segoe UI", Font.BOLD, 14));
+        p.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(220, 220, 220)),
-                title,
-                TitledBorder.LEFT,
-                TitledBorder.TOP,
-                new Font("Segoe UI", Font.BOLD, 13)
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
+        p.setBorder(t);
         return p;
     }
 
     private GridBagConstraints gbc() {
         GridBagConstraints g = new GridBagConstraints();
-        g.insets = new Insets(8, 10, 8, 10);
+        g.insets = new Insets(10, 12, 10, 12);
         g.fill = GridBagConstraints.HORIZONTAL;
         g.weightx = 1;
         return g;
@@ -339,19 +383,22 @@ public class StaffUI extends JPanel {
         JButton b = new JButton(t);
         b.setBackground(new Color(52, 120, 208));
         b.setForeground(Color.WHITE);
+        b.setFocusPainted(false);
         return b;
     }
 
     private JButton secondaryButton(String t) {
         JButton b = new JButton(t);
-        b.setBackground(new Color(180, 180, 180));
+        b.setBackground(new Color(200, 200, 200));
+        b.setFocusPainted(false);
         return b;
     }
 
     private JButton dangerButton(String t) {
         JButton b = new JButton(t);
-        b.setBackground(new Color(220, 80, 80));
+        b.setBackground(new Color(210, 70, 70));
         b.setForeground(Color.WHITE);
+        b.setFocusPainted(false);
         return b;
     }
 }

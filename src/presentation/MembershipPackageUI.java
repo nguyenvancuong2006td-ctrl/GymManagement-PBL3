@@ -9,6 +9,7 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.ArrayList;
@@ -16,14 +17,21 @@ import java.util.List;
 
 public class MembershipPackageUI extends JPanel {
 
-    // ===== FORM =====
+    /* ===== STYLE ===== */
+    private static final Font FONT_NORMAL = new Font("Segoe UI", Font.PLAIN, 13);
+    private static final Font FONT_BOLD   = new Font("Segoe UI", Font.BOLD, 13);
+
+    /* ===== FORM FIELD ===== */
     private JTextField txtID, txtName, txtDuration, txtPrice;
 
-    // ===== TABLE & SEARCH =====
+    /* ===== BUTTONS ===== */
+    private JButton btnAdd, btnUpdate, btnDelete, btnClear;
+
+    /* ===== TABLE & SEARCH ===== */
     private JTable table;
     private JTextField txtSearch;
 
-    // ===== DATA =====
+    /* ===== DATA ===== */
     private final MembershipPackageBUS bus = new MembershipPackageBUS();
     private List<MembershipPackage> allPackages = new ArrayList<>();
 
@@ -31,6 +39,8 @@ public class MembershipPackageUI extends JPanel {
         setLayout(new BorderLayout(15, 15));
         setBackground(new Color(240, 242, 245));
         setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+
+        applyGlobalStyle();
 
         add(createFormWrapper(), BorderLayout.NORTH);
         add(createTablePanel(), BorderLayout.CENTER);
@@ -40,9 +50,17 @@ public class MembershipPackageUI extends JPanel {
         clearForm();
     }
 
-    /* =========================================================
-                            FORM (REDESIGNED)
-       ========================================================= */
+    /* ================= GLOBAL STYLE ================= */
+
+    private void applyGlobalStyle() {
+        UIManager.put("Label.font", FONT_NORMAL);
+        UIManager.put("TextField.font", FONT_NORMAL);
+        UIManager.put("Button.font", FONT_BOLD);
+        UIManager.put("Table.font", FONT_NORMAL);
+        UIManager.put("TableHeader.font", FONT_BOLD);
+    }
+
+    /* ================= FORM ================= */
 
     private JPanel createFormWrapper() {
         JPanel wrapper = new JPanel(new GridBagLayout());
@@ -50,32 +68,34 @@ public class MembershipPackageUI extends JPanel {
 
         JPanel card = createCard("Membership Package");
         card.setLayout(new GridBagLayout());
-        card.setPreferredSize(new Dimension(650, 200));
+        card.setPreferredSize(new Dimension(720, 180));
 
         GridBagConstraints g = new GridBagConstraints();
         g.insets = new Insets(10, 16, 10, 16);
         g.fill = GridBagConstraints.HORIZONTAL;
 
-        txtID = field(false);
-        txtName = field(true);
-        txtDuration = field(true);
-        txtPrice = field(true);
+        // ID KHÔNG HIỂN THỊ – CHỈ DÙNG NỘI BỘ
+        txtID = new JTextField();
+        txtID.setEnabled(false);
 
-        // ===== ROW 0 =====
+        txtName = new JTextField();
+        txtDuration = new JTextField();
+        txtPrice = new JTextField();
+
+        // ROW 1
         g.gridy = 0;
-        addFormField(card, g, 0, "ID", txtID);
-        addFormField(card, g, 2, "Package Name", txtName);
+        addFormField(card, g, 0, "Package Name", txtName);
+        addFormField(card, g, 2, "Duration (Months)", txtDuration);
 
-        // ===== ROW 1 =====
+        // ROW 2
         g.gridy = 1;
-        addFormField(card, g, 0, "Duration (Months)", txtDuration);
-        addFormField(card, g, 2, "Price", txtPrice);
+        addFormField(card, g, 0, "Price", txtPrice);
 
-        // ===== BUTTON =====
-        JButton btnAdd = primaryButton("Add");
-        JButton btnUpdate = secondaryButton("Update");
-        JButton btnDelete = dangerButton("Delete");
-        JButton btnClear = secondaryButton("Clear");
+        // BUTTONS
+        btnAdd = primaryButton("Add");
+        btnUpdate = secondaryButton("Update");
+        btnDelete = dangerButton("Delete");
+        btnClear = secondaryButton("Clear");
 
         btnAdd.addActionListener(e -> addPackage());
         btnUpdate.addActionListener(e -> updatePackage());
@@ -101,22 +121,16 @@ public class MembershipPackageUI extends JPanel {
 
     private void addFormField(JPanel panel, GridBagConstraints g,
                               int x, String label, JTextField field) {
-
         g.gridx = x;
         g.weightx = 0;
-        JLabel lb = new JLabel(label + ":");
-        lb.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        panel.add(lb, g);
+        panel.add(new JLabel(label + ":"), g);
 
         g.gridx = x + 1;
         g.weightx = 1;
-        field.setPreferredSize(new Dimension(220, 28));
         panel.add(field, g);
     }
 
-    /* =========================================================
-                          TABLE + SEARCH
-       ========================================================= */
+    /* ================= TABLE ================= */
 
     private JPanel createTablePanel() {
         JPanel wrapper = new JPanel(new BorderLayout(8, 8));
@@ -128,9 +142,9 @@ public class MembershipPackageUI extends JPanel {
         JPanel searchPanel = new JPanel(new BorderLayout(6, 0));
         searchPanel.setOpaque(false);
 
-        JLabel lblSearch = new JLabel("Search:");
         txtSearch = new JTextField();
-        txtSearch.setPreferredSize(new Dimension(220, 28));
+        searchPanel.add(new JLabel("Search:"), BorderLayout.WEST);
+        searchPanel.add(txtSearch, BorderLayout.CENTER);
 
         txtSearch.getDocument().addDocumentListener(new DocumentListener() {
             private void update() { filterTable(txtSearch.getText()); }
@@ -139,11 +153,9 @@ public class MembershipPackageUI extends JPanel {
             public void changedUpdate(DocumentEvent e) {}
         });
 
-        searchPanel.add(lblSearch, BorderLayout.WEST);
-        searchPanel.add(txtSearch, BorderLayout.CENTER);
-
         table = new JTable();
-        table.setRowHeight(26);
+        table.setRowHeight(28);
+        styleTable(table);
         table.getSelectionModel().addListSelectionListener(e -> fillFormFromTable());
 
         card.add(searchPanel, BorderLayout.NORTH);
@@ -153,9 +165,32 @@ public class MembershipPackageUI extends JPanel {
         return wrapper;
     }
 
-    /* =========================================================
-                               DATA
-       ========================================================= */
+    private void styleTable(JTable table) {
+        table.getTableHeader().setBackground(new Color(245, 246, 248));
+        table.getTableHeader().setForeground(new Color(60, 60, 60));
+        table.setGridColor(new Color(230, 230, 230));
+
+        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(
+                    JTable table, Object value,
+                    boolean isSelected, boolean hasFocus,
+                    int row, int column) {
+
+                Component c = super.getTableCellRendererComponent(
+                        table, value, isSelected, hasFocus, row, column);
+
+                if (!isSelected) {
+                    c.setBackground(row % 2 == 0
+                            ? Color.WHITE
+                            : new Color(248, 248, 248));
+                }
+                return c;
+            }
+        });
+    }
+
+    /* ================= DATA ================= */
 
     private void loadData() {
         allPackages = bus.getAll();
@@ -163,11 +198,11 @@ public class MembershipPackageUI extends JPanel {
     }
 
     private void filterTable(String keyword) {
-        String key = keyword == null ? "" : keyword.toLowerCase();
-
         DefaultTableModel model = new DefaultTableModel(
                 new String[]{"ID", "Name", "Duration", "Price"}, 0
         );
+
+        String key = keyword.toLowerCase();
 
         for (MembershipPackage p : allPackages) {
             if (p.getPackageName().toLowerCase().contains(key)) {
@@ -182,9 +217,7 @@ public class MembershipPackageUI extends JPanel {
         table.setModel(model);
     }
 
-    /* =========================================================
-                               CRUD
-       ========================================================= */
+    /* ================= CRUD ================= */
 
     private MembershipPackage getFormData() {
         MembershipPackage p = new MembershipPackage();
@@ -234,57 +267,51 @@ public class MembershipPackageUI extends JPanel {
         table.clearSelection();
     }
 
-    /* =========================================================
-                         UI PERMISSION
-       ========================================================= */
+    /* ================= PERMISSION ================= */
 
     private void applyUiPermission() {
         boolean isAdmin = Session.getRole() == Role.Admin;
-        txtName.setEnabled(isAdmin);
-        txtDuration.setEnabled(isAdmin);
-        txtPrice.setEnabled(isAdmin);
+        btnAdd.setVisible(isAdmin);
+        btnUpdate.setVisible(isAdmin);
+        btnDelete.setVisible(isAdmin);
+        btnClear.setVisible(isAdmin);
     }
 
-    /* =========================================================
-                             HELPERS
-       ========================================================= */
+    /* ================= HELPERS ================= */
 
     private JPanel createCard(String title) {
         JPanel p = new JPanel();
         p.setBackground(Color.WHITE);
-        p.setBorder(BorderFactory.createTitledBorder(
+        TitledBorder t = BorderFactory.createTitledBorder(title);
+        t.setTitleFont(new Font("Segoe UI", Font.BOLD, 14));
+        p.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(220, 220, 220)),
-                title,
-                TitledBorder.LEFT,
-                TitledBorder.TOP,
-                new Font("Segoe UI", Font.BOLD, 13)
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
+        p.setBorder(t);
         return p;
-    }
-
-    private JTextField field(boolean enable) {
-        JTextField f = new JTextField();
-        f.setEnabled(enable);
-        return f;
     }
 
     private JButton primaryButton(String t) {
         JButton b = new JButton(t);
         b.setBackground(new Color(52, 120, 208));
         b.setForeground(Color.WHITE);
+        b.setFocusPainted(false);
         return b;
     }
 
     private JButton secondaryButton(String t) {
         JButton b = new JButton(t);
-        b.setBackground(new Color(180, 180, 180));
+        b.setBackground(new Color(200, 200, 200));
+        b.setFocusPainted(false);
         return b;
     }
 
     private JButton dangerButton(String t) {
         JButton b = new JButton(t);
-        b.setBackground(new Color(220, 80, 80));
+        b.setBackground(new Color(210, 70, 70));
         b.setForeground(Color.WHITE);
+        b.setFocusPainted(false);
         return b;
     }
 }

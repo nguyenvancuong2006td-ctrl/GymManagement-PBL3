@@ -14,7 +14,7 @@ public class MainFrame extends JFrame {
     private Account account;
 
     private JButton btnDashboard, btnStaff, btnMember, btnPackage,
-            btnSchedule, btnPT, btnProduct,btnProductShop,
+            btnSchedule, btnPT,btnPTServiceManagement, btnProduct,btnProductShop,
             btnPayment, btnReport, btnSystem;
 
     private JButton activeButton = null;
@@ -69,6 +69,7 @@ public class MainFrame extends JFrame {
         btnPackage = createMenuButton("Quản lý gói tập");
         btnSchedule = createMenuButton("Quản lý lịch tập");
         btnPT = createMenuButton("Quản lý PT");
+        btnPTServiceManagement = createMenuButton("Quản lý dịch vụ PT");
         btnProduct = createMenuButton("Quản lý sản phẩm");
         btnProductShop = createMenuButton("Product Shop");
         btnPayment = createMenuButton("Quản lý thanh toán");
@@ -81,6 +82,7 @@ public class MainFrame extends JFrame {
         sidebar.add(btnPackage);
         sidebar.add(btnSchedule);
         sidebar.add(btnPT);
+        sidebar.add(btnPTServiceManagement);
         sidebar.add(btnProduct);
         sidebar.add(btnProductShop);
         sidebar.add(btnPayment);
@@ -178,6 +180,13 @@ public class MainFrame extends JFrame {
             openPanel(btnPT, new TrainerUI());
         });
 
+        btnPTServiceManagement.addActionListener(e -> {
+            if (!account.hasPermission(Permission.PTService_VIEW)) {
+                deny(); return;
+            }
+            openPanel(btnPTServiceManagement, new PTServiceManagementUI());
+        });
+
         btnProduct.addActionListener(e -> {
             if (!account.hasPermission(Permission.PRODUCT_MANAGE)) {
                 deny(); return;
@@ -232,6 +241,7 @@ public class MainFrame extends JFrame {
         btnPackage.setVisible(account.hasPermission(Permission.PACKAGE_VIEW));
         btnSchedule.setVisible(account.hasPermission(Permission.SCHEDULE_VIEW));
         btnPT.setVisible(account.hasPermission(Permission.TRAINER_VIEW));
+        btnPTServiceManagement.setVisible(account.hasPermission(Permission.PTService_VIEW));
         btnProduct.setVisible(account.hasPermission(Permission.PRODUCT_MANAGE));
         btnProductShop.setVisible(account.hasPermission(Permission.PRODUCT_SHOP_VIEW));
         btnPayment.setVisible(account.hasPermission(Permission.PAYMENT_VIEW));

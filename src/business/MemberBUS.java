@@ -30,8 +30,6 @@ public class MemberBUS {
 
         if (!dao.insert(m))
             throw new RuntimeException("Thêm thất bại!");
-
-        // ✅ Trả về hội viên vừa tạo (có memberID)
         return dao.getLatest();
     }
 
@@ -75,4 +73,18 @@ public class MemberBUS {
         }
         return rs;
     }
+
+    // ===== GET BY ID (ADMIN + STAFF) =====
+    public Member getById(int memberID) {
+        AuthorizationService.check(Permission.MEMBER_VIEW);
+
+        Member m = dao.findById(memberID);
+        if (m == null) {
+            throw new IllegalArgumentException(
+                    "Không tìm thấy hội viên với ID = " + memberID
+            );
+        }
+        return m;
+    }
+
 }

@@ -10,7 +10,7 @@ public class MemberPackage {
     private LocalDate startDate;
     private LocalDate endDate;
     private String status;
-    private int invoiceID;
+
 
     public MemberPackage() {
     }
@@ -61,13 +61,5 @@ public class MemberPackage {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public int getInvoiceID() {
-        return invoiceID;
-    }
-
-    public void setInvoiceID(int invoiceID) {
-        this.invoiceID = invoiceID;
     }
 }

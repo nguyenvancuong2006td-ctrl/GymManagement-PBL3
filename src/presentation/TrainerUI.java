@@ -9,6 +9,7 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.ArrayList;
@@ -16,18 +17,22 @@ import java.util.List;
 
 public class TrainerUI extends JPanel {
 
-    // ===== FORM =====
+    /* ================= STYLE ================= */
+    private static final Font FONT_NORMAL = new Font("Segoe UI", Font.PLAIN, 13);
+    private static final Font FONT_BOLD   = new Font("Segoe UI", Font.BOLD, 13);
+
+    /* ================= FORM ================= */
     private JTextField txtID, txtName, txtPhone, txtHireDate, txtSalary;
     private JComboBox<String> cbGender;
 
-    // ===== TABLE & SEARCH =====
+    /* ================= TABLE ================= */
     private JTable table;
     private JTextField txtSearch;
 
-    // ===== BUTTON =====
+    /* ================= BUTTON ================= */
     private JButton btnAdd, btnUpdate, btnDelete, btnClear;
 
-    // ===== DATA =====
+    /* ================= DATA ================= */
     private final TrainerBUS trainerBUS = new TrainerBUS();
     private List<Trainer> allTrainers = new ArrayList<>();
 
@@ -36,6 +41,8 @@ public class TrainerUI extends JPanel {
         setLayout(new BorderLayout(15, 15));
         setBackground(new Color(240, 242, 245));
         setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+
+        applyGlobalStyle();
 
         add(createFormWrapper(), BorderLayout.NORTH);
         add(createTablePanel(), BorderLayout.CENTER);
@@ -46,7 +53,20 @@ public class TrainerUI extends JPanel {
     }
 
     /* =========================================================
-                          FORM – CĂN GIỮA
+                        GLOBAL STYLE (UI ONLY)
+       ========================================================= */
+
+    private void applyGlobalStyle() {
+        UIManager.put("Label.font", FONT_NORMAL);
+        UIManager.put("TextField.font", FONT_NORMAL);
+        UIManager.put("ComboBox.font", FONT_NORMAL);
+        UIManager.put("Button.font", FONT_BOLD);
+        UIManager.put("Table.font", FONT_NORMAL);
+        UIManager.put("TableHeader.font", FONT_BOLD);
+    }
+
+    /* =========================================================
+                          FORM – CENTERED CARD
        ========================================================= */
 
     private JPanel createFormWrapper() {
@@ -55,11 +75,11 @@ public class TrainerUI extends JPanel {
 
         JPanel card = createCard("Trainer Information");
         card.setLayout(new GridBagLayout());
-        card.setPreferredSize(new Dimension(720, 280)); // ✅ gọn, trung tâm
+        card.setPreferredSize(new Dimension(760, 260));
 
         GridBagConstraints g = gbc();
 
-        txtID = field(false);
+        txtID = field(false);      // system-generated → not editable
         txtName = field(true);
         txtPhone = field(true);
         txtHireDate = field(false);
@@ -91,7 +111,7 @@ public class TrainerUI extends JPanel {
         g.gridx = 1;
         g.gridy = 3;
         g.gridwidth = 3;
-        g.fill = GridBagConstraints.NONE;
+        g.anchor = GridBagConstraints.EAST;
         card.add(btnPanel, g);
 
         wrapper.add(card);
@@ -114,10 +134,10 @@ public class TrainerUI extends JPanel {
         searchPanel.setOpaque(false);
 
         JLabel lblSearch = new JLabel("Search:");
-        lblSearch.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblSearch.setFont(FONT_BOLD);
 
         txtSearch = new JTextField();
-        txtSearch.setPreferredSize(new Dimension(220, 28));
+        txtSearch.setPreferredSize(new Dimension(240, 28));
 
         txtSearch.getDocument().addDocumentListener(new DocumentListener() {
             private void update() {
@@ -132,7 +152,8 @@ public class TrainerUI extends JPanel {
         searchPanel.add(txtSearch, BorderLayout.CENTER);
 
         table = new JTable();
-        table.setRowHeight(26);
+        table.setRowHeight(28);
+        styleTable(table);
         table.getSelectionModel().addListSelectionListener(e -> fillFormFromTable());
 
         JScrollPane scroll = new JScrollPane(table);
@@ -145,7 +166,36 @@ public class TrainerUI extends JPanel {
     }
 
     /* =========================================================
-                             DATA
+                             TABLE STYLE (UI ONLY)
+       ========================================================= */
+
+    private void styleTable(JTable table) {
+        table.getTableHeader().setBackground(new Color(245, 246, 248));
+        table.getTableHeader().setForeground(new Color(60, 60, 60));
+        table.setGridColor(new Color(230, 230, 230));
+
+        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(
+                    JTable table, Object value,
+                    boolean isSelected, boolean hasFocus,
+                    int row, int column) {
+
+                Component c = super.getTableCellRendererComponent(
+                        table, value, isSelected, hasFocus, row, column);
+
+                if (!isSelected) {
+                    c.setBackground(row % 2 == 0
+                            ? Color.WHITE
+                            : new Color(248, 248, 248));
+                }
+                return c;
+            }
+        });
+    }
+
+    /* =========================================================
+                             DATA (KHÔNG ĐỔI)
        ========================================================= */
 
     private void loadData() {
@@ -178,7 +228,7 @@ public class TrainerUI extends JPanel {
     }
 
     /* =========================================================
-                              CRUD
+                              CRUD (KHÔNG ĐỔI)
        ========================================================= */
 
     private Trainer getFormData() {
@@ -252,7 +302,7 @@ public class TrainerUI extends JPanel {
     }
 
     /* =========================================================
-                        UI PERMISSION
+                        UI PERMISSION (KHÔNG ĐỔI)
        ========================================================= */
 
     private void applyUiPermission() {
@@ -270,19 +320,22 @@ public class TrainerUI extends JPanel {
     private JPanel createCard(String title) {
         JPanel p = new JPanel();
         p.setBackground(Color.WHITE);
-        p.setBorder(BorderFactory.createTitledBorder(
+
+        TitledBorder t = BorderFactory.createTitledBorder(title);
+        t.setTitleFont(new Font("Segoe UI", Font.BOLD, 14));
+        t.setTitleColor(new Color(60, 60, 60));
+
+        p.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(220, 220, 220)),
-                title,
-                TitledBorder.LEFT,
-                TitledBorder.TOP,
-                new Font("Segoe UI", Font.BOLD, 13)
+                BorderFactory.createEmptyBorder(12, 12, 12, 12)
         ));
+        p.setBorder(t);
         return p;
     }
 
     private GridBagConstraints gbc() {
         GridBagConstraints g = new GridBagConstraints();
-        g.insets = new Insets(8, 10, 8, 10);
+        g.insets = new Insets(10, 12, 10, 12);
         g.anchor = GridBagConstraints.WEST;
         return g;
     }
@@ -304,7 +357,7 @@ public class TrainerUI extends JPanel {
         p.add(new JLabel(l2), g);
 
         g.gridx = 3;
-        f2.setPreferredSize(new Dimension(160, 28));
+        f2.setPreferredSize(new Dimension(170, 28));
         p.add(f2, g);
     }
 
@@ -319,19 +372,22 @@ public class TrainerUI extends JPanel {
         JButton b = new JButton(t);
         b.setBackground(new Color(52, 120, 208));
         b.setForeground(Color.WHITE);
+        b.setFocusPainted(false);
         return b;
     }
 
     private JButton secondaryButton(String t) {
         JButton b = new JButton(t);
-        b.setBackground(new Color(180, 180, 180));
+        b.setBackground(new Color(200, 200, 200));
+        b.setFocusPainted(false);
         return b;
     }
 
     private JButton dangerButton(String t) {
         JButton b = new JButton(t);
-        b.setBackground(new Color(220, 80, 80));
+        b.setBackground(new Color(210, 70, 70));
         b.setForeground(Color.WHITE);
+        b.setFocusPainted(false);
         return b;
     }
 }

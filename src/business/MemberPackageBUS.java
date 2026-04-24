@@ -14,6 +14,8 @@ public class MemberPackageBUS {
 
     /**
      * Đăng ký hoặc gia hạn gói tập cho hội viên
+     * - KHÔNG tạo hóa đơn ở đây
+     * - Hóa đơn sẽ tạo ở luồng thanh toán
      */
     public void registerPackage(int memberID, int packageID) {
 
@@ -43,14 +45,13 @@ public class MemberPackageBUS {
         // 3. Tính ngày kết thúc
         LocalDate endDate = startDate.plusMonths(pkg.getDuration());
 
-        // 4. Tạo MemberPackage
+        // 4. Tạo MemberPackage (KHÔNG invoice)
         MemberPackage mp = new MemberPackage();
         mp.setMemberID(memberID);
         mp.setPackageID(packageID);
         mp.setStartDate(startDate);
         mp.setEndDate(endDate);
-        mp.setStatus("ACTIVE");
-        mp.setInvoiceID(0); // để 0, sau này gắn hóa đơn
+        mp.setStatus("Active");
 
         // 5. Insert
         boolean ok = memberPackageDAO.insert(mp);

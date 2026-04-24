@@ -3,6 +3,7 @@ package business;
 import data.MemberPTDAO;
 import data.PTServiceDAO;
 import model.MemberPT;
+import model.MemberPTItem;
 import model.PTService;
 
 public class MemberPTBUS {
@@ -10,31 +11,56 @@ public class MemberPTBUS {
     private final MemberPTDAO memberPTDAO = new MemberPTDAO();
     private final PTServiceDAO ptServiceDAO = new PTServiceDAO();
 
+    /* ===================== CHECK CÒN BUỔI ===================== */
+
     /**
-     * Mua dịch vụ PT cho hội viên
+     * Kiểm tra gói PT còn buổi để ĐĂNG KÝ LỊCH hay không
      */
-    public void buyPT(int memberID, int serviceID) {
+    public boolean canUseSession(int memberPTID) {
 
-        if (memberID <= 0)
-            throw new IllegalArgumentException("MemberID không hợp lệ");
+        if (memberPTID <= 0)
+            throw new IllegalArgumentException("MemberPTID không hợp lệ");
 
-        if (serviceID <= 0)
-            throw new IllegalArgumentException("ServiceID không hợp lệ");
+        MemberPT mp = memberPTDAO.findById(memberPTID);
+        if (mp == null)
+            throw new IllegalArgumentException("Không tìm thấy gói PT");
 
-        // 1. Kiểm tra dịch vụ PT
-        PTService service = ptServiceDAO.findById(serviceID);
+        PTService service = ptServiceDAO.findById(mp.getServiceID());
         if (service == null)
-            throw new IllegalArgumentException("Dịch vụ PT không tồn tại");
+            throw new IllegalStateException("Dịch vụ PT không tồn tại");
 
-        // 2. Tạo MemberPT
-        MemberPT mp = new MemberPT();
-        mp.setMemberID(memberID);
-        mp.setServiceID(serviceID);
-        mp.setUsedSessions(0);
-        mp.setInvoiceID(0); // sau này gắn hóa đơn
+        return mp.getUsedSessions() < service.getTotalSessions();
+    }
 
-        boolean ok = memberPTDAO.insert(mp);
-        if (!ok)
-            throw new RuntimeException("Mua dịch vụ PT thất bại");
+    /* ===================== TRỪ BUỔI (KHI DONE) ===================== */
+
+    /**
+     * Trừ 1 buổi PT
+     * ⚠️ CHỈ gọi khi buổi tập đã HOÀN THÀNH (status = DONE)
+     */
+    public void useSessionAfterDone(int memberPTID) {
+
+        if (memberPTID <= 0)
+            throw new IllegalArgumentException("MemberPTID không hợp lệ");
+
+        MemberPT mp = memberPTDAO.findById(memberPTID);
+        if (mp == null)
+            throw new IllegalArgumentException("Không tìm thấy gói PT");
+
+        PTService service = ptServiceDAO.findById(mp.getServiceID());
+        if (service == null)
+            throw new IllegalStateException("Dịch vụ PT không tồn tại");
+
+        int used = mp.getUsedSessions();
+        int total = service.getTotalSessions();
+
+        if (used >= total)
+            throw new IllegalStateException("Gói PT đã dùng hết buổi");
+
+        memberPTDAO.updateUsedSessions(memberPTID, used + 1);
+    }
+
+    public Iterable<MemberPTItem> getActiveMemberPTItems() {
+        return memberPTDAO.getActiveMemberPTItems();
     }
 }

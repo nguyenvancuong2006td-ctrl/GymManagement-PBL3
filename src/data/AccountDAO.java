@@ -15,15 +15,9 @@ public class AccountDAO {
 
         acc.setAccountID(rs.getInt("accountID"));
         acc.setUsername(rs.getString("username"));
-
-        // ĐÚNG CỘT TRONG DB
         acc.setPassword(rs.getString("password"));
-
-        // MAP STRING → ENUM Role
         acc.setRole(rs.getString("role"));
-
         acc.setStatus(rs.getString("status"));
-
         Date date = rs.getDate("createDate");
         if (date != null) {
             acc.setCreateDate(date.toLocalDate());
@@ -84,12 +78,8 @@ public class AccountDAO {
 
             ps.setString(1, acc.getUsername());
             ps.setString(2, acc.getPassword());
-
-            // ✅ ENUM → STRING
             ps.setString(3, acc.getRoleString());
-
             ps.setString(4, acc.getStatus());
-
             return ps.executeUpdate() > 0;
         }
     }
