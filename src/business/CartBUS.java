@@ -36,10 +36,6 @@ public class CartBUS {
         cart.put(p, newQty);
     }
 
-    public void remove(Product p) {
-        cart.remove(p);
-    }
-
     public void clear() {
         cart.clear();
     }
@@ -64,5 +60,41 @@ public class CartBUS {
 
     public boolean isEmpty() {
         return cart.isEmpty();
+    }
+
+    public void decrease(Product p) {
+
+        if (p == null) return;
+
+        Integer currentQty = cart.get(p);
+
+        if (currentQty == null) {
+            return; // sản phẩm không có trong giỏ
+        }
+
+        if (currentQty <= 1) {
+            cart.remove(p); // về 0 thì xóa khỏi giỏ
+        } else {
+            cart.put(p, currentQty - 1);
+        }
+    }
+
+    public void add(Product p) {
+
+        if (p == null) {
+            throw new IllegalArgumentException("Sản phẩm không hợp lệ!");
+        }
+
+        int currentQty = cart.getOrDefault(p, 0);
+        int newQty = currentQty + 1;
+
+        // Kiểm tra tồn kho
+        if (newQty > p.getQuantityInStock()) {
+            throw new RuntimeException(
+                    "Số lượng vượt tồn kho! Còn lại: " + p.getQuantityInStock()
+            );
+        }
+
+        cart.put(p, newQty);
     }
 }

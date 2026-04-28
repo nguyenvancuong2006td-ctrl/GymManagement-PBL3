@@ -13,26 +13,27 @@ import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.time.LocalDate;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class StaffUI extends JPanel {
 
-    /* ===== FONT & COLOR ===== */
+    /* ================= FONT ================= */
     private static final Font FONT_NORMAL = new Font("Segoe UI", Font.PLAIN, 13);
-    private static final Font FONT_BOLD = new Font("Segoe UI", Font.BOLD, 13);
+    private static final Font FONT_BOLD   = new Font("Segoe UI", Font.BOLD, 13);
 
-    /* ===== ACCOUNT ===== */
+    /* ================= ACCOUNT ================= */
     private JTextField txtUsername, txtAccountID;
     private JPasswordField txtPassword;
     private JComboBox<String> cbRole;
 
-    /* ===== STAFF ===== */
+    /* ================= STAFF ================= */
     private JTextField txtStaffID, txtName, txtPhone, txtSalary;
     private JComboBox<String> cbGender;
 
-    /* ===== TABLE & SEARCH ===== */
+    /* ================= TABLE ================= */
     private JTable table;
     private JTextField txtSearch;
 
@@ -42,6 +43,8 @@ public class StaffUI extends JPanel {
     private final StaffBUS staffBUS = new StaffBUS();
 
     private int currentAccountID = -1;
+
+    /* ================= CONSTRUCTOR ================= */
 
     public StaffUI() {
         setLayout(new BorderLayout(15, 15));
@@ -53,7 +56,7 @@ public class StaffUI extends JPanel {
         add(createTopForm(), BorderLayout.NORTH);
         add(createTablePanel(), BorderLayout.CENTER);
 
-        lockStaff(true);
+        resetToCreateMode();
         loadStaffTable("");
     }
 
@@ -72,11 +75,11 @@ public class StaffUI extends JPanel {
     /* ================= TOP FORM ================= */
 
     private JPanel createTopForm() {
-        JPanel panel = new JPanel(new GridLayout(1, 2, 15, 0));
-        panel.setOpaque(false);
-        panel.add(createAccountCard());
-        panel.add(createStaffCard());
-        return panel;
+        JPanel p = new JPanel(new GridLayout(1, 2, 15, 0));
+        p.setOpaque(false);
+        p.add(createAccountCard());
+        p.add(createStaffCard());
+        return p;
     }
 
     /* ================= ACCOUNT CARD ================= */
@@ -103,7 +106,6 @@ public class StaffUI extends JPanel {
 
         g.gridx = 1;
         g.gridy = 4;
-        g.anchor = GridBagConstraints.EAST;
         p.add(btnCreate, g);
 
         return p;
@@ -117,25 +119,25 @@ public class StaffUI extends JPanel {
         txtStaffID = new JTextField();
         txtStaffID.setEditable(false);
         txtName = new JTextField();
-        cbGender = new JComboBox<>(new String[]{"Male", "Female", "Other"});
         txtPhone = new JTextField();
         txtSalary = new JTextField();
+        cbGender = new JComboBox<>(new String[]{"Male", "Female", "Other"});
 
-        JButton btnAdd = primaryButton("Add");
+        JButton btnAdd    = primaryButton("Add");
         JButton btnUpdate = secondaryButton("Update");
         JButton btnDelete = dangerButton("Delete");
-        JButton btnClear = secondaryButton("Clear");
+        JButton btnClear  = secondaryButton("Clear");
 
         btnAdd.addActionListener(e -> addStaff());
-        btnUpdate.addActionListener(e -> updateStaff());
+        btnUpdate.addActionListener(e -> updateAll());
         btnDelete.addActionListener(e -> deleteStaff());
-        btnClear.addActionListener(e -> clearStaffForm());
+        btnClear.addActionListener(e -> resetToCreateMode());
 
         p.setLayout(new GridBagLayout());
         GridBagConstraints g = gbc();
 
         addRow(p, g, 0, "Staff ID", txtStaffID);
-        addRow(p, g, 1, "Full name", txtName);
+        addRow(p, g, 1, "Full Name", txtName);
         addRow(p, g, 2, "Gender", cbGender);
         addRow(p, g, 3, "Phone", txtPhone);
         addRow(p, g, 4, "Salary", txtSalary);
@@ -154,7 +156,7 @@ public class StaffUI extends JPanel {
         return p;
     }
 
-    /* ================= TABLE PANEL ================= */
+    /* ================= TABLE ================= */
 
     private JPanel createTablePanel() {
         JPanel wrapper = new JPanel(new BorderLayout(8, 8));
@@ -170,47 +172,28 @@ public class StaffUI extends JPanel {
             public void changedUpdate(DocumentEvent e) {}
         });
 
-        JPanel searchPanel = new JPanel(new BorderLayout(5, 0));
-        searchPanel.setOpaque(false);
-        searchPanel.add(new JLabel("Search:"), BorderLayout.WEST);
-        searchPanel.add(txtSearch, BorderLayout.CENTER);
-
         table = new JTable();
         table.setRowHeight(28);
         table.getSelectionModel().addListSelectionListener(e -> fillFormFromTable());
+        styleZebraTable(table);
 
-        styleTable(table);
-
-        card.add(searchPanel, BorderLayout.NORTH);
+        card.add(txtSearch, BorderLayout.NORTH);
         card.add(new JScrollPane(table), BorderLayout.CENTER);
-
         wrapper.add(card, BorderLayout.CENTER);
         return wrapper;
     }
 
     /* ================= TABLE STYLE ================= */
 
-    private void styleTable(JTable table) {
-        table.getTableHeader().setBackground(new Color(245, 246, 248));
-        table.getTableHeader().setForeground(new Color(60, 60, 60));
-        table.setGridColor(new Color(230, 230, 230));
-
+    private void styleZebraTable(JTable table) {
         table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(
-                    JTable table, Object value,
-                    boolean isSelected, boolean hasFocus,
-                    int row, int column) {
+                    JTable t, Object v, boolean s, boolean f, int r, int c) {
 
-                Component c = super.getTableCellRendererComponent(
-                        table, value, isSelected, hasFocus, row, column);
-
-                if (!isSelected) {
-                    c.setBackground(row % 2 == 0
-                            ? Color.WHITE
-                            : new Color(248, 248, 248));
-                }
-                return c;
+                Component comp = super.getTableCellRendererComponent(t, v, s, f, r, c);
+                if (!s) comp.setBackground(r % 2 == 0 ? Color.WHITE : new Color(248, 248, 248));
+                return comp;
             }
         });
     }
@@ -223,11 +206,9 @@ public class StaffUI extends JPanel {
     }
 
     private void filterTable(String keyword) {
+
         DefaultTableModel m = new DefaultTableModel(
-                new String[]{
-                        "Staff ID", "Name", "Gender", "Phone",
-                        "Salary", "Username", "Password"
-                }, 0
+                new String[]{"Staff ID","Name","Gender","Phone","Salary","Username","Password"}, 0
         );
 
         String key = keyword == null ? "" : keyword.toLowerCase();
@@ -235,6 +216,7 @@ public class StaffUI extends JPanel {
         for (StaffAccount s : allStaff) {
             if (s.getFullName().toLowerCase().contains(key)
                     || s.getUsername().toLowerCase().contains(key)) {
+
                 m.addRow(new Object[]{
                         s.getStaffID(),
                         s.getFullName(),
@@ -246,26 +228,54 @@ public class StaffUI extends JPanel {
                 });
             }
         }
+
         table.setModel(m);
+
+        // ===== FORMAT SALARY – LEFT ALIGN =====
+        NumberFormat nf = NumberFormat.getInstance(new Locale("vi", "VN"));
+
+        DefaultTableCellRenderer salaryRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(
+                    JTable table, Object value, boolean isSelected,
+                    boolean hasFocus, int row, int column) {
+
+                Component c = super.getTableCellRendererComponent(
+                        table, value, isSelected, hasFocus, row, column);
+
+                if (value instanceof Number) {
+                    setText(nf.format(((Number) value).longValue()));
+                } else {
+                    setText("");
+                }
+
+                setHorizontalAlignment(SwingConstants.LEFT);
+                return c;
+            }
+        };
+
+        table.getColumnModel().getColumn(4).setCellRenderer(salaryRenderer);
     }
 
     private void fillFormFromTable() {
         int r = table.getSelectedRow();
         if (r < 0) return;
 
-        txtStaffID.setText(table.getValueAt(r, 0).toString());
-        txtName.setText(table.getValueAt(r, 1).toString());
-        cbGender.setSelectedItem(table.getValueAt(r, 2));
-        txtPhone.setText(table.getValueAt(r, 3).toString());
-        txtSalary.setText(table.getValueAt(r, 4).toString());
+        StaffAccount sa = allStaff.get(r);
 
-        txtUsername.setText(table.getValueAt(r, 5).toString());
-        txtPassword.setText(table.getValueAt(r, 6).toString());
+        txtStaffID.setText(String.valueOf(sa.getStaffID()));
+        txtName.setText(sa.getFullName());
+        cbGender.setSelectedItem(sa.getGender());
+        txtPhone.setText(sa.getPhone());
+        txtSalary.setText(String.valueOf(sa.getSalary()));
+        txtUsername.setText(sa.getUsername());
+        txtPassword.setText(sa.getPassword());
+        txtAccountID.setText(String.valueOf(sa.getAccountID()));
 
         lockStaff(false);
     }
 
-    /* ================= CRUD (KHÔNG ĐỔI LOGIC) ================= */
+    /* ================= CRUD ================= */
 
     private void createAccount() {
         try {
@@ -277,6 +287,7 @@ public class StaffUI extends JPanel {
             currentAccountID = accountBUS.createStaffAccount(acc);
             txtAccountID.setText(String.valueOf(currentAccountID));
             lockStaff(false);
+
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, e.getMessage());
         }
@@ -284,35 +295,45 @@ public class StaffUI extends JPanel {
 
     private void addStaff() {
         try {
+            if (currentAccountID < 0)
+                throw new Exception("Vui lòng tạo Account trước");
+
             Staff s = new Staff();
             s.setFullName(txtName.getText());
             s.setGender(cbGender.getSelectedItem().toString());
             s.setPhoneNumber(txtPhone.getText());
             s.setSalary(Double.parseDouble(txtSalary.getText()));
-            s.setHireDate(LocalDate.now());
             s.setAccountID(currentAccountID);
 
             staffBUS.addStaff(s);
             loadStaffTable("");
-            clearStaffForm();
+            resetToCreateMode();
+
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, e.getMessage());
         }
     }
 
-    private void updateStaff() {
+    private void updateAll() {
         try {
+            Account acc = new Account();
+            acc.setAccountID(Integer.parseInt(txtAccountID.getText()));
+            acc.setUsername(txtUsername.getText());
+            acc.setPassword(new String(txtPassword.getPassword()));
+            acc.setRole(cbRole.getSelectedItem().toString());
+            accountBUS.updateAccount(acc);
+
             Staff s = new Staff();
             s.setStaffID(Integer.parseInt(txtStaffID.getText()));
             s.setFullName(txtName.getText());
             s.setGender(cbGender.getSelectedItem().toString());
             s.setPhoneNumber(txtPhone.getText());
             s.setSalary(Double.parseDouble(txtSalary.getText()));
-            s.setHireDate(LocalDate.now());
-
             staffBUS.updateStaff(s);
+
             loadStaffTable("");
-            clearStaffForm();
+            resetToCreateMode();
+
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, e.getMessage());
         }
@@ -322,40 +343,45 @@ public class StaffUI extends JPanel {
         try {
             staffBUS.deleteStaff(Integer.parseInt(txtStaffID.getText()));
             loadStaffTable("");
-            clearStaffForm();
+            resetToCreateMode();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, e.getMessage());
         }
     }
 
-    private void lockStaff(boolean b) {
-        txtName.setEnabled(!b);
-        cbGender.setEnabled(!b);
-        txtPhone.setEnabled(!b);
-        txtSalary.setEnabled(!b);
+    /* ================= STATE ================= */
+
+    private void lockStaff(boolean lock) {
+        txtName.setEnabled(!lock);
+        cbGender.setEnabled(!lock);
+        txtPhone.setEnabled(!lock);
+        txtSalary.setEnabled(!lock);
     }
 
-    private void clearStaffForm() {
+    private void resetToCreateMode() {
         txtStaffID.setText("");
         txtName.setText("");
         txtPhone.setText("");
         txtSalary.setText("");
         txtUsername.setText("");
         txtPassword.setText("");
+        txtAccountID.setText("");
+        cbRole.setSelectedIndex(0);
+        currentAccountID = -1;
         table.clearSelection();
         lockStaff(true);
     }
 
-    /* ================= UI HELPER ================= */
+    /* ================= UI HELPERS ================= */
 
     private JPanel createCard(String title) {
         JPanel p = new JPanel();
         p.setBackground(Color.WHITE);
         TitledBorder t = BorderFactory.createTitledBorder(title);
-        t.setTitleFont(new Font("Segoe UI", Font.BOLD, 14));
+        t.setTitleFont(FONT_BOLD);
         p.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220, 220, 220)),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)
+                BorderFactory.createLineBorder(new Color(220,220,220)),
+                BorderFactory.createEmptyBorder(10,10,10,10)
         ));
         p.setBorder(t);
         return p;
@@ -363,42 +389,36 @@ public class StaffUI extends JPanel {
 
     private GridBagConstraints gbc() {
         GridBagConstraints g = new GridBagConstraints();
-        g.insets = new Insets(10, 12, 10, 12);
+        g.insets = new Insets(8,10,8,10);
         g.fill = GridBagConstraints.HORIZONTAL;
         g.weightx = 1;
         return g;
     }
 
     private void addRow(JPanel p, GridBagConstraints g, int y, String l, JComponent f) {
-        g.gridx = 0;
-        g.gridy = y;
-        g.weightx = 0;
+        g.gridx = 0; g.gridy = y; g.weightx = 0;
         p.add(new JLabel(l), g);
-        g.gridx = 1;
-        g.weightx = 1;
+        g.gridx = 1; g.weightx = 1;
         p.add(f, g);
     }
 
     private JButton primaryButton(String t) {
         JButton b = new JButton(t);
-        b.setBackground(new Color(52, 120, 208));
+        b.setBackground(new Color(52,120,208));
         b.setForeground(Color.WHITE);
-        b.setFocusPainted(false);
         return b;
     }
 
     private JButton secondaryButton(String t) {
         JButton b = new JButton(t);
-        b.setBackground(new Color(200, 200, 200));
-        b.setFocusPainted(false);
+        b.setBackground(new Color(200,200,200));
         return b;
     }
 
     private JButton dangerButton(String t) {
         JButton b = new JButton(t);
-        b.setBackground(new Color(210, 70, 70));
+        b.setBackground(new Color(210,70,70));
         b.setForeground(Color.WHITE);
-        b.setFocusPainted(false);
         return b;
     }
 }

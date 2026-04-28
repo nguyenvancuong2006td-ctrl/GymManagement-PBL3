@@ -116,7 +116,7 @@ public class PaymentManagementUI extends JPanel {
 
     private void loadData() {
         allInvoices = invoiceBUS.getAllInvoices();
-        initDefaultDateRange();   // ✅ SET NGÀY MẶC ĐỊNH THÔNG MINH
+        initDefaultDateRange();   //  SET NGÀY MẶC ĐỊNH
         filterAndShow();
     }
 
@@ -243,6 +243,7 @@ public class PaymentManagementUI extends JPanel {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn hóa đơn");
             return;
         }
+
 
         int invoiceID = (int) table.getValueAt(row, 0);
         util.InvoicePDFExporter.export(invoiceID);

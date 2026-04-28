@@ -77,7 +77,7 @@ public class StaffDAO {
         }
     }
 
-    // ✅ QUAN TRỌNG: Lấy Staff theo accountID
+    // QUAN TRỌNG: Lấy Staff theo accountID
     public Staff getByAccountID(int accountID) {
 
         String sql = "SELECT * FROM Staff WHERE accountID = ?";
@@ -166,7 +166,7 @@ public class StaffDAO {
 
         String sql = """
             UPDATE Staff
-            SET fullName = ?, gender = ?, phoneNumber = ?, hireDate = ?, salary = ?
+            SET fullName = ?, gender = ?, phoneNumber = ?, salary = ?
             WHERE staffID = ?
         """;
 
@@ -176,13 +176,13 @@ public class StaffDAO {
             ps.setString(1, s.getFullName());
             ps.setString(2, s.getGender());
             ps.setString(3, s.getPhoneNumber());
-            ps.setDate(4, Date.valueOf(s.getHireDate()));
-            ps.setDouble(5, s.getSalary());
-            ps.setInt(6, s.getStaffID());
+            ps.setDouble(4, s.getSalary());
+            ps.setInt(5, s.getStaffID());
 
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
+            e.printStackTrace();
             throw new RuntimeException("Update staff failed", e);
         }
     }

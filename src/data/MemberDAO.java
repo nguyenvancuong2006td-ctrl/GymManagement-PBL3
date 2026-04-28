@@ -220,4 +220,30 @@ public class MemberDAO {
         }
     }
 
+    // ================== GET BY PHONE ==================
+    public Member getByPhone(String phoneNumber) {
+
+        String sql = """
+        SELECT memberID, fullName, gender, phoneNumber, joinDate
+        FROM Member
+        WHERE phoneNumber = ?
+    """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, phoneNumber);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSet(rs);
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error getting member by phone", e);
+        }
+
+        return null;
+    }
 }

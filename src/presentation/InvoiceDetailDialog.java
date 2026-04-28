@@ -18,12 +18,12 @@ public class InvoiceDetailDialog extends JDialog {
 
     private final InvoiceBUS bus = new InvoiceBUS();
 
-    // ✅ DAO để lấy tên item
+    //  DAO để lấy tên item
     private final ProductDAO productDAO = new ProductDAO();
     private final MembershipPackageDAO packageDAO = new MembershipPackageDAO();
     private final PTServiceDAO ptServiceDAO = new PTServiceDAO();
 
-    public InvoiceDetailDialog(JFrame parent, int invoiceID) {
+    public InvoiceDetailDialog(Frame parent, int invoiceID) {
         super(parent, "Chi tiết hóa đơn #" + invoiceID, true);
         setSize(850, 560);
         setLocationRelativeTo(parent);

@@ -31,7 +31,6 @@ public class InvoicePDFExporter {
 
     private static final InvoiceBUS bus = new InvoiceBUS();
 
-    // ✅ DAO để lấy tên item
     private static final ProductDAO productDAO = new ProductDAO();
     private static final MembershipPackageDAO packageDAO = new MembershipPackageDAO();
     private static final PTServiceDAO ptServiceDAO = new PTServiceDAO();
@@ -43,7 +42,12 @@ public class InvoicePDFExporter {
             List<InvoiceDetail> details = bus.getInvoiceDetails(invoiceID);
             List<Payment> payments = bus.getPayments(invoiceID);
 
-            String fileName = "Invoice_" + invoiceID + ".pdf";
+            // ✅ ADD: tạo thư mục invoices nếu chưa tồn tại
+            String dir = "invoices";
+            new File(dir).mkdirs();
+
+            // ✅ ADD: lưu file vào thư mục invoices
+            String fileName = dir + "/Invoice_" + invoiceID + ".pdf";
 
             PdfWriter writer = new PdfWriter(fileName);
             PdfDocument pdf = new PdfDocument(writer);
@@ -173,13 +177,10 @@ public class InvoicePDFExporter {
         switch (d.getItemType()) {
             case "PRODUCT":
                 return productDAO.getNameByID(d.getItemID());
-
             case "PACKAGE":
                 return packageDAO.getNameByID(d.getItemID());
-
             case "PT":
                 return ptServiceDAO.getNameByID(d.getItemID());
-
             default:
                 return "Không xác định";
         }
@@ -204,7 +205,7 @@ public class InvoicePDFExporter {
                 .setTextAlignment(TextAlignment.CENTER);
     }
 
-    private static String formatMoney(BigDecimal money) {
+    public static String formatMoney(BigDecimal money) {
         return String.format("%,d đ", money.longValue());
     }
 }

@@ -114,27 +114,67 @@ public class CartUI extends JDialog {
                 BorderFactory.createLineBorder(new Color(220, 220, 220)),
                 BorderFactory.createEmptyBorder(10, 12, 10, 12)
         ));
-        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
+        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
 
+        // ===== LEFT ICON =====
+        JLabel icon = new JLabel("📦");
+        icon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 20));
+        card.add(icon, BorderLayout.WEST);
+
+        // ===== CENTER INFO =====
         JLabel name = new JLabel(p.getProductName());
         name.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
-        JLabel quantity = new JLabel("Số lượng: " + qty);
-        quantity.setForeground(Color.GRAY);
+        JLabel quantityLabel = new JLabel("Số lượng: " + qty);
+        quantityLabel.setForeground(Color.GRAY);
 
         JPanel info = new JPanel();
         info.setLayout(new BoxLayout(info, BoxLayout.Y_AXIS));
         info.setBackground(Color.WHITE);
         info.add(name);
-        info.add(quantity);
+        info.add(quantityLabel);
 
+        card.add(info, BorderLayout.CENTER);
+
+        // ===== RIGHT CONTROL =====
+        JPanel right = new JPanel(new BorderLayout());
+        right.setBackground(Color.WHITE);
+
+        // Tổng tiền dòng này
         BigDecimal total = p.getPrice().multiply(BigDecimal.valueOf(qty));
         JLabel price = new JLabel(formatMoney(total));
         price.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        price.setHorizontalAlignment(SwingConstants.RIGHT);
 
-        card.add(new JLabel("📦"), BorderLayout.WEST);
-        card.add(info, BorderLayout.CENTER);
-        card.add(price, BorderLayout.EAST);
+        // Nút + / -
+        JButton btnMinus = new JButton("−");
+        JButton btnPlus = new JButton("+");
+
+        btnMinus.setFocusPainted(false);
+        btnPlus.setFocusPainted(false);
+
+        btnMinus.setPreferredSize(new Dimension(45, 30));
+        btnPlus.setPreferredSize(new Dimension(45, 30));
+
+        btnMinus.addActionListener(e -> {
+            cartBUS.decrease(p);
+            loadCart();
+        });
+
+        btnPlus.addActionListener(e -> {
+            cartBUS.add(p);
+            loadCart();
+        });
+
+        JPanel qtyPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
+        qtyPanel.setBackground(Color.WHITE);
+        qtyPanel.add(btnMinus);
+        qtyPanel.add(btnPlus);
+
+        right.add(price, BorderLayout.NORTH);
+        right.add(qtyPanel, BorderLayout.SOUTH);
+
+        card.add(right, BorderLayout.EAST);
 
         return card;
     }

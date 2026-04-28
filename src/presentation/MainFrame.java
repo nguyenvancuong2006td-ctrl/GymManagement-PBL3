@@ -13,7 +13,7 @@ public class MainFrame extends JFrame {
     private JPanel sidebar, content, header;
     private Account account;
 
-    private JButton btnDashboard, btnStaff, btnMember, btnPackage,
+    private JButton btnDashboard,btnCheckIn, btnStaff, btnMember, btnPackage,
             btnSchedule, btnPT,btnPTServiceManagement, btnProduct,btnProductShop,
             btnPayment, btnReport, btnSystem;
 
@@ -64,6 +64,7 @@ public class MainFrame extends JFrame {
         sidebar.add(Box.createVerticalStrut(15));
 
         btnDashboard = createMenuButton("Dashboard");
+        btnCheckIn = createMenuButton("Check-in");
         btnStaff = createMenuButton("Quản lý nhân viên");
         btnMember = createMenuButton("Quản lý hội viên");
         btnPackage = createMenuButton("Quản lý gói tập");
@@ -77,6 +78,7 @@ public class MainFrame extends JFrame {
         btnSystem = createMenuButton("Quản lý hệ thống");
 
         sidebar.add(btnDashboard);
+        sidebar.add(btnCheckIn);
         sidebar.add(btnStaff);
         sidebar.add(btnMember);
         sidebar.add(btnPackage);
@@ -142,6 +144,10 @@ public class MainFrame extends JFrame {
 
         btnDashboard.addActionListener(e ->
                 openPanel(btnDashboard, new DashboardUI())
+        );
+
+        btnCheckIn.addActionListener(e ->
+                openPanel(btnCheckIn, new CheckInPanel())
         );
 
         btnStaff.addActionListener(e -> {
@@ -219,16 +225,14 @@ public class MainFrame extends JFrame {
             if (!account.hasPermission(Permission.REPORT_VIEW)) {
                 deny(); return;
             }
-            showText("Thống kê báo cáo");
-            setActiveButton(btnReport);
+            openPanel(btnReport, new ReportPanel());
         });
 
         btnSystem.addActionListener(e -> {
             if (!account.hasPermission(Permission.ACCOUNT_MANAGE)) {
                 deny(); return;
             }
-            showText("Quản lý hệ thống");
-            setActiveButton(btnSystem);
+            openPanel(btnSystem, new SystemManagementPanel());
         });
     }
 

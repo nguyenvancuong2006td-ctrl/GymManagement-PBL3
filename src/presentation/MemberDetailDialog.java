@@ -11,6 +11,15 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.math.BigDecimal;
 import java.util.List;
+import business.CheckInBUS;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+import java.text.NumberFormat;
+import java.util.Locale;
+
+
 
 public class MemberDetailDialog extends JDialog {
 
@@ -80,8 +89,9 @@ public class MemberDetailDialog extends JDialog {
 
         tab.addTab("Thông tin", wrap(createInfoTab()));
         tab.addTab("Gói tập", wrap(createPackageTab()));
-        tab.addTab("PT", createPTTab());          // ✅ TAB PT FULL UI
+        tab.addTab("PT", createPTTab());
         tab.addTab("Hóa đơn", createInvoiceTab());
+        tab.addTab("Check-in", createCheckInHistoryTab());
 
         return tab;
     }
@@ -347,6 +357,7 @@ public class MemberDetailDialog extends JDialog {
 
     /* ================= TAB: INVOICE ================= */
 
+
     private JPanel createInvoiceTab() {
 
         JPanel root = new JPanel(new BorderLayout(10, 10));
@@ -358,7 +369,11 @@ public class MemberDetailDialog extends JDialog {
         for (Invoice i : invoices) total = total.add(i.getTotalAmount());
 
         JLabel summary = new JLabel(
-                "Tổng hóa đơn: " + invoices.size() + " | Tổng tiền: " + total + " VND"
+                "Tổng hóa đơn: " + invoices.size() +
+                        " | Tổng tiền: " +
+                        NumberFormat
+                                .getCurrencyInstance(new Locale("vi", "VN"))
+                                .format(total)
         );
         summary.setFont(FONT_BOLD);
         root.add(summary, BorderLayout.NORTH);
@@ -379,7 +394,54 @@ public class MemberDetailDialog extends JDialog {
         }
 
         JTable invoiceTable = new JTable(invoiceModel);
-        JScrollPane left = new JScrollPane(invoiceTable);
+        invoiceTable.setRowHeight(28);
+
+        // ===== FORMATTER =====
+        DateTimeFormatter dateFmt =
+                DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        NumberFormat moneyFmt =
+                NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+
+        // ===== ID – CENTER =====
+        DefaultTableCellRenderer center = new DefaultTableCellRenderer();
+        center.setHorizontalAlignment(SwingConstants.CENTER);
+        invoiceTable.getColumnModel().getColumn(0).setCellRenderer(center);
+
+        // ===== NGÀY LẬP – DD/MM/YYYY =====
+        invoiceTable.getColumnModel().getColumn(1)
+                .setCellRenderer(new DefaultTableCellRenderer() {
+                    @Override
+                    protected void setValue(Object value) {
+                        if (value instanceof LocalDateTime) {
+                            setHorizontalAlignment(SwingConstants.CENTER);
+                            setText(((LocalDateTime) value).format(dateFmt));
+                        } else {
+                            setText("");
+                        }
+                    }
+                });
+
+        // ===== TỔNG TIỀN – GIÁ TIỀN ĐẸP =====
+        invoiceTable.getColumnModel().getColumn(2)
+                .setCellRenderer(new DefaultTableCellRenderer() {
+                    @Override
+                    protected void setValue(Object value) {
+                        if (value instanceof BigDecimal) {
+                            setHorizontalAlignment(SwingConstants.LEFT);
+                            setText(moneyFmt.format(value));
+                        } else {
+                            setText("");
+                        }
+                    }
+                });
+
+        // ===== NHÂN VIÊN – LEFT =====
+        DefaultTableCellRenderer left = new DefaultTableCellRenderer();
+        left.setHorizontalAlignment(SwingConstants.LEFT);
+        invoiceTable.getColumnModel().getColumn(3).setCellRenderer(left);
+
+        JScrollPane leftPane = new JScrollPane(invoiceTable);
 
         DefaultTableModel detailModel = new DefaultTableModel(
                 new String[]{"Dịch vụ", "Số lượng", "Đơn giá", "Thành tiền"}, 0
@@ -388,7 +450,7 @@ public class MemberDetailDialog extends JDialog {
         };
 
         JTable detailTable = new JTable(detailModel);
-        JScrollPane right = new JScrollPane(detailTable);
+        JScrollPane rightPane = new JScrollPane(detailTable);
 
         InvoiceDetailDAO detailDAO = new InvoiceDetailDAO();
 
@@ -396,25 +458,140 @@ public class MemberDetailDialog extends JDialog {
             int row = invoiceTable.getSelectedRow();
             if (row < 0) return;
 
-            int invoiceID = Integer.parseInt(invoiceTable.getValueAt(row, 0).toString());
+            int invoiceID =
+                    Integer.parseInt(invoiceTable.getValueAt(row, 0).toString());
             detailModel.setRowCount(0);
 
             for (InvoiceDetail d : detailDAO.getByInvoice(invoiceID)) {
+                BigDecimal lineTotal =
+                        d.getPrice().multiply(BigDecimal.valueOf(d.getQuantity()));
+
                 detailModel.addRow(new Object[]{
                         d.getItemName(),
                         d.getQuantity(),
-                        d.getPrice(),
-                        d.getPrice().multiply(BigDecimal.valueOf(d.getQuantity()))
+                        moneyFmt.format(d.getPrice()),
+                        moneyFmt.format(lineTotal)
                 });
             }
         });
 
-        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, left, right);
+        JSplitPane split =
+                new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPane, rightPane);
         split.setDividerLocation(420);
 
         root.add(split, BorderLayout.CENTER);
         return root;
     }
+
+
+    private JPanel createCheckInHistoryTab() {
+
+        JPanel root = new JPanel(new BorderLayout(20, 20));
+        root.setBackground(BG_APP);
+        root.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        /* ================= HEADER ================= */
+
+        JLabel title = new JLabel("CHECK-IN");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 18));
+
+        JLabel subtitle = new JLabel("Lịch sử ra vào của hội viên");
+        subtitle.setFont(FONT_NORMAL);
+        subtitle.setForeground(Color.GRAY);
+
+        JPanel header = new JPanel(new BorderLayout(4, 4));
+        header.setOpaque(false);
+        header.add(title, BorderLayout.NORTH);
+        header.add(subtitle, BorderLayout.SOUTH);
+
+        root.add(header, BorderLayout.NORTH);
+
+        /* ================= DATA (UI → BUS) ================= */
+
+        Member member = memberBUS.getById(memberID);
+        CheckInBUS checkInBUS = new CheckInBUS();
+
+        List<CheckIn> history =
+                checkInBUS.getCheckInHistory(member.getPhoneNumber());
+
+        int total =
+                checkInBUS.getTotalCheckIn(member.getPhoneNumber());
+
+        LocalDateTime latest =
+                checkInBUS.getLatestCheckIn(member.getPhoneNumber());
+
+        DateTimeFormatter dateFmt =
+                DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        DateTimeFormatter timeFmt =
+                DateTimeFormatter.ofPattern("HH:mm");
+
+        /* ================= CONTENT ================= */
+
+        JPanel content = new JPanel(new BorderLayout(20, 20));
+        content.setOpaque(false);
+        root.add(content, BorderLayout.CENTER);
+
+        /* ================= SUMMARY ================= */
+
+        JPanel summary = new JPanel(new GridLayout(1, 2, 20, 0));
+        summary.setOpaque(false);
+
+        summary.add(summaryCard(
+                "Tổng lượt check-in",
+                String.valueOf(total)
+        ));
+
+        summary.add(summaryCard(
+                "Lần gần nhất",
+                latest == null
+                        ? "Chưa có"
+                        : latest.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+        ));
+
+        content.add(summary, BorderLayout.NORTH);
+
+        /* ================= TABLE ================= */
+
+        JPanel tableCard = cardBorder("LỊCH SỬ CHECK-IN");
+
+        DefaultTableModel model = new DefaultTableModel(
+                new String[]{"Ngày", "Giờ check-in"}, 0
+        ) {
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
+        };
+
+        for (CheckIn ci : history) {
+            model.addRow(new Object[]{
+                    ci.getCheckInTime().format(dateFmt),
+                    ci.getCheckInTime().format(timeFmt)
+            });
+        }
+
+        JTable table = new JTable(model);
+        table.setRowHeight(32);
+        table.getTableHeader().setBackground(new Color(245, 246, 248));
+        table.getTableHeader().setReorderingAllowed(false);
+        table.setGridColor(new Color(230, 230, 230));
+
+        DefaultTableCellRenderer center = new DefaultTableCellRenderer();
+        center.setHorizontalAlignment(SwingConstants.CENTER);
+        table.getColumnModel().getColumn(0).setCellRenderer(center);
+        table.getColumnModel().getColumn(1).setCellRenderer(center);
+
+        table.getColumnModel().getColumn(0).setPreferredWidth(200);
+        table.getColumnModel().getColumn(1).setPreferredWidth(120);
+
+        JScrollPane scroll = new JScrollPane(table);
+        scroll.setBorder(null);
+
+        tableCard.add(scroll, BorderLayout.CENTER);
+        content.add(tableCard, BorderLayout.CENTER);
+
+        return root;
+    }
+
 
     /* ================= UI HELPERS ================= */
 

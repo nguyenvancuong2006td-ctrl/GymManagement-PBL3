@@ -12,8 +12,10 @@ import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class MembershipPackageUI extends JPanel {
 
@@ -34,6 +36,10 @@ public class MembershipPackageUI extends JPanel {
     /* ===== DATA ===== */
     private final MembershipPackageBUS bus = new MembershipPackageBUS();
     private List<MembershipPackage> allPackages = new ArrayList<>();
+
+    /* ===== PRICE FORMATTER ===== */
+    private final NumberFormat priceFormat =
+            NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
 
     public MembershipPackageUI() {
         setLayout(new BorderLayout(15, 15));
@@ -74,7 +80,6 @@ public class MembershipPackageUI extends JPanel {
         g.insets = new Insets(10, 16, 10, 16);
         g.fill = GridBagConstraints.HORIZONTAL;
 
-        // ID KHÔNG HIỂN THỊ – CHỈ DÙNG NỘI BỘ
         txtID = new JTextField();
         txtID.setEnabled(false);
 
@@ -82,16 +87,13 @@ public class MembershipPackageUI extends JPanel {
         txtDuration = new JTextField();
         txtPrice = new JTextField();
 
-        // ROW 1
         g.gridy = 0;
         addFormField(card, g, 0, "Package Name", txtName);
         addFormField(card, g, 2, "Duration (Months)", txtDuration);
 
-        // ROW 2
         g.gridy = 1;
-        addFormField(card, g, 0, "Price", txtPrice);
+        addFormField(card, g, 0, "Price (₫)", txtPrice);
 
-        // BUTTONS
         btnAdd = primaryButton("Add");
         btnUpdate = secondaryButton("Update");
         btnDelete = dangerButton("Delete");
@@ -202,10 +204,8 @@ public class MembershipPackageUI extends JPanel {
                 new String[]{"ID", "Name", "Duration", "Price"}, 0
         );
 
-        String key = keyword.toLowerCase();
-
         for (MembershipPackage p : allPackages) {
-            if (p.getPackageName().toLowerCase().contains(key)) {
+            if (p.getPackageName().toLowerCase().contains(keyword.toLowerCase())) {
                 model.addRow(new Object[]{
                         p.getPackageID(),
                         p.getPackageName(),
@@ -214,7 +214,38 @@ public class MembershipPackageUI extends JPanel {
                 });
             }
         }
+
         table.setModel(model);
+
+        /* ===== RENDERER CHUẨN CĂN LỀ ===== */
+
+        // ID – CENTER
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        table.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
+
+        // NAME – LEFT
+        DefaultTableCellRenderer leftRenderer = new DefaultTableCellRenderer();
+        leftRenderer.setHorizontalAlignment(SwingConstants.LEFT);
+        table.getColumnModel().getColumn(1).setCellRenderer(leftRenderer);
+
+        // DURATION – CENTER
+        table.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
+
+        // PRICE – FORMAT + LEFT
+        table.getColumnModel().getColumn(3).setCellRenderer(
+                new DefaultTableCellRenderer() {
+                    @Override
+                    protected void setValue(Object value) {
+                        if (value instanceof Number) {
+                            setHorizontalAlignment(SwingConstants.LEFT);
+                            setText(priceFormat.format(value));
+                        } else {
+                            setText("");
+                        }
+                    }
+                }
+        );
     }
 
     /* ================= CRUD ================= */
@@ -223,7 +254,12 @@ public class MembershipPackageUI extends JPanel {
         MembershipPackage p = new MembershipPackage();
         p.setPackageName(txtName.getText());
         p.setDuration(Integer.parseInt(txtDuration.getText()));
-        p.setPrice(Double.parseDouble(txtPrice.getText()));
+
+        double price = Double.parseDouble(
+                txtPrice.getText().replaceAll("[^0-9]", "")
+        );
+        p.setPrice(price);
+
         return p;
     }
 
@@ -256,7 +292,11 @@ public class MembershipPackageUI extends JPanel {
         txtID.setText(table.getValueAt(r, 0).toString());
         txtName.setText(table.getValueAt(r, 1).toString());
         txtDuration.setText(table.getValueAt(r, 2).toString());
-        txtPrice.setText(table.getValueAt(r, 3).toString());
+
+        double price = Double.parseDouble(
+                table.getValueAt(r, 3).toString().replaceAll("[^0-9]", "")
+        );
+        txtPrice.setText(String.format("%,.0f", price));
     }
 
     private void clearForm() {

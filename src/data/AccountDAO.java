@@ -110,7 +110,7 @@ public class AccountDAO {
     public boolean update(Account acc) throws SQLException {
         String sql = """
             UPDATE Account
-            SET username=?, password=?, role=?, status=?
+            SET username=?, password=?, role=?
             WHERE accountID=?
         """;
 
@@ -120,8 +120,7 @@ public class AccountDAO {
             ps.setString(1, acc.getUsername());
             ps.setString(2, acc.getPassword());
             ps.setString(3, acc.getRoleString());
-            ps.setString(4, acc.getStatus());
-            ps.setInt(5, acc.getAccountID());
+            ps.setInt(4, acc.getAccountID());
 
             return ps.executeUpdate() > 0;
         }

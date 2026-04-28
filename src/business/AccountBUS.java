@@ -19,8 +19,6 @@ public class AccountBUS {
 
         if (dao.getByUsername(acc.getUsername()) != null)
             throw new Exception("Username already exists");
-
-        acc.setRole("Staff");
         acc.setStatus("Active");
 
         return dao.insertAndReturnID(acc);
