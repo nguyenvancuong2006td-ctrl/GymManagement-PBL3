@@ -22,23 +22,19 @@ public class BackupRestoreUtil {
 
     public static boolean restoreDatabase() {
         try {
-            // ✅ ÉP DB về SINGLE_USER để ngắt connection
-            DBConnection.execute(
-                    "ALTER DATABASE " + DB_NAME +
-                            " SET SINGLE_USER WITH ROLLBACK IMMEDIATE"
-            );
+            String sql =
+                    "USE master; " +
+                            "ALTER DATABASE " + DB_NAME +
+                            " SET SINGLE_USER WITH ROLLBACK IMMEDIATE; " +
 
-            // ✅ PHỤC HỒI DATABASE
-            DBConnection.execute(
-                    "RESTORE DATABASE " + DB_NAME +
-                            " FROM DISK = '" + BACKUP_PATH + "' WITH REPLACE"
-            );
+                            "RESTORE DATABASE " + DB_NAME +
+                            " FROM DISK = '" + BACKUP_PATH + "' WITH REPLACE; " +
 
-            // ✅ MỞ LẠI CHẾ ĐỘ MULTI_USER
-            DBConnection.execute(
-                    "ALTER DATABASE " + DB_NAME +
-                            " SET MULTI_USER"
-            );
+                            "ALTER DATABASE " + DB_NAME +
+                            " SET MULTI_USER;";
+
+            //  BẮT BUỘC dùng master
+            DBConnection.executeOnMaster(sql);
 
             return true;
         } catch (Exception e) {
@@ -46,4 +42,5 @@ public class BackupRestoreUtil {
             return false;
         }
     }
+
 }

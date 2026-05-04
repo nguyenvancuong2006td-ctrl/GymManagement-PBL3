@@ -32,4 +32,26 @@ public class DBConnection {
         }
     }
 
+    // KẾT NỐI DATABASE master (dùng cho BACKUP / RESTORE)
+    public static Connection getMasterConnection() throws SQLException {
+        String masterUrl =
+                "jdbc:sqlserver://localhost:1433;databaseName=master;"
+                        + "encrypt=false;trustServerCertificate=true";
+
+        return DriverManager.getConnection(masterUrl, USER, PASS);
+    }
+
+    //  THỰC THI SQL TRÊN master
+    public static void executeOnMaster(String sql) {
+        try (
+                Connection conn = getMasterConnection();
+                Statement stmt = conn.createStatement()
+        ) {
+            stmt.execute(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Lỗi thực thi SQL hệ thống (master)");
+        }
+    }
+
 }
