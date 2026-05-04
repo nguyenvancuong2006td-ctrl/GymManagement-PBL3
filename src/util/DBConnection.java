@@ -53,5 +53,4 @@ public class DBConnection {
             throw new RuntimeException("Lỗi thực thi SQL hệ thống (master)");
         }
     }
-
 }

@@ -17,6 +17,9 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 public class MemberUI extends JPanel {
 
     // ===== FORM =====
@@ -32,6 +35,11 @@ public class MemberUI extends JPanel {
 
     private final MemberBUS memberBUS = new MemberBUS();
     private List<Member> allMembers = new ArrayList<>();
+
+
+    private final DateTimeFormatter dateFormatter =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
 
     public MemberUI() {
 
@@ -163,19 +171,29 @@ public class MemberUI extends JPanel {
         ) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // KHÓA EDIT
+                return false;
             }
         };
 
+
         for (Member m : list) {
+
+            String joinDateStr = "";
+            LocalDateTime joinDate = m.getJoinDate();
+
+            if (joinDate != null) {
+                joinDateStr = joinDate.format(dateFormatter);
+            }
+
             model.addRow(new Object[]{
                     m.getMemberID(),
                     m.getFullName(),
                     m.getGender(),
                     m.getPhoneNumber(),
-                    m.getJoinDate()
+                    joinDateStr
             });
         }
+
         table.setModel(model);
     }
 
@@ -244,7 +262,7 @@ public class MemberUI extends JPanel {
         txtName.setText(table.getValueAt(r, 1).toString());
         cbGender.setSelectedItem(table.getValueAt(r, 2));
         txtPhone.setText(table.getValueAt(r, 3).toString());
-        txtJoinDate.setText(String.valueOf(table.getValueAt(r, 4)));
+        txtJoinDate.setText(table.getValueAt(r, 4).toString());
 
         btnUpdate.setEnabled(true);
         btnDelete.setEnabled(true);
