@@ -126,7 +126,7 @@ public class MemberUI extends JPanel {
         table.setDefaultEditor(Object.class, null);
         table.getSelectionModel().addListSelectionListener(e -> fillForm());
 
-        // ✅ DOUBLE CLICK HERE
+        //  DOUBLE CLICK HERE
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
