@@ -5,6 +5,7 @@ import business.ServiceCheckoutBUS;
 import data.MemberPackageDAO;
 import util.InvoicePDFExporter;
 import model.*;
+import util.RoundedButton;
 import util.Session;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -12,6 +13,7 @@ import java.awt.event.MouseEvent;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.ArrayList;
@@ -86,11 +88,11 @@ public class MemberUI extends JPanel {
     private JPanel createButtonPanel() {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 6));
 
-        btnAdd = btn("Add", new Color(76, 175, 80));
-        btnUpdate = btn("Update", new Color(255, 152, 0));
-        btnDelete = btn("Delete", new Color(220, 80, 80));
-        btnClear = btn("Clear", new Color(180, 180, 180));
-        btnRegisterPackage = btn("Đăng ký gói", new Color(33, 150, 243));
+        btnAdd = new RoundedButton("Add", new Color(46, 204, 113));
+        btnUpdate = new RoundedButton("Update", new Color(52, 152, 219));
+        btnDelete = new RoundedButton("Delete", new Color(231, 76, 60));
+        btnClear = new RoundedButton("Clear", new Color(127, 140, 141));
+        btnRegisterPackage = new RoundedButton("Đăng ký gói", new Color(155, 89, 182));
 
         btnRegisterPackage.setEnabled(false);
 
@@ -194,6 +196,8 @@ public class MemberUI extends JPanel {
             });
         }
 
+        table.setModel(model);
+        styleTable(table);
         table.setModel(model);
     }
 
@@ -454,5 +458,42 @@ public class MemberUI extends JPanel {
             g.gridx = 3; g.weightx = 1;
             p.add(f2, g);
         }
+    }
+
+    private void styleTable(JTable table) {
+
+        table.setRowHeight(30);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        table.setSelectionBackground(new Color(52, 152, 219));
+        table.setSelectionForeground(Color.WHITE);
+        table.setGridColor(new Color(230, 230, 230));
+        table.setShowHorizontalLines(true);
+        table.setShowVerticalLines(false);
+        table.setIntercellSpacing(new Dimension(0, 0));
+
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        table.getTableHeader().setBackground(new Color(44, 62, 80));
+        table.getTableHeader().setForeground(Color.WHITE);
+    }
+
+    private void applyZebra(JTable table) {
+        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(
+                    JTable t, Object value, boolean isSelected,
+                    boolean hasFocus, int row, int col) {
+
+                Component c = super.getTableCellRendererComponent(
+                        t, value, isSelected, hasFocus, row, col);
+
+                if (!isSelected) {
+                    c.setBackground(row % 2 == 0
+                            ? Color.WHITE
+                            : new Color(248, 248, 248));
+                }
+
+                return c;
+            }
+        });
     }
 }

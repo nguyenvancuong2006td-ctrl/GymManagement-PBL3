@@ -54,7 +54,7 @@ public class RevenueReportDialog extends JDialog {
         ) {
             @Override
             public boolean isCellEditable(int r, int c) {
-                return false; // ✅ KHÓA KHÔNG CHO NHẬP
+                return false;
             }
         };
 
@@ -83,8 +83,6 @@ public class RevenueReportDialog extends JDialog {
             });
             totalRevenue += i.getTotalAmount().doubleValue();
         }
-
-        /* ===== CANH GIỮA ===== */
 
         DefaultTableCellRenderer center =
                 new DefaultTableCellRenderer();

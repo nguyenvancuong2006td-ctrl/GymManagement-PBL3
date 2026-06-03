@@ -9,6 +9,7 @@ import model.Product;
 import model.Role;
 import model.Staff;
 import util.InvoicePDFExporter;
+import util.RoundedButton;
 import util.Session;
 
 import javax.swing.*;
@@ -140,15 +141,15 @@ public class CartUI extends JDialog {
         JPanel right = new JPanel(new BorderLayout());
         right.setBackground(Color.WHITE);
 
-        // Tổng tiền dòng này
+        // Tổng tiền
         BigDecimal total = p.getPrice().multiply(BigDecimal.valueOf(qty));
         JLabel price = new JLabel(formatMoney(total));
         price.setFont(new Font("Segoe UI", Font.BOLD, 14));
         price.setHorizontalAlignment(SwingConstants.RIGHT);
 
         // Nút + / -
-        JButton btnMinus = new JButton("−");
-        JButton btnPlus = new JButton("+");
+        JButton btnMinus = new RoundedButton("−", new Color(231, 76, 60)); // đỏ (giảm / xóa)
+        JButton btnPlus  = new RoundedButton("+", new Color(46, 204, 113)); // xanh (thêm)
 
         btnMinus.setFocusPainted(false);
         btnPlus.setFocusPainted(false);

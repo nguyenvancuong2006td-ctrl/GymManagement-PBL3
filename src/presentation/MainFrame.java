@@ -126,6 +126,14 @@ public class MainFrame extends JFrame {
         SwingUtilities.invokeLater(() ->
                 openPanel(btnDashboard, new DashboardUI())
         );
+        SwingUtilities.invokeLater(() -> {
+            if (account.hasPermission(Permission.DASHBOARD_VIEW)) {
+                openPanel(btnDashboard, new DashboardUI());
+            } else {
+                openPanel(btnCheckIn, new CheckInPanel());
+            }
+        });
+
     }
 
     /* ================= OPEN PANEL ================= */

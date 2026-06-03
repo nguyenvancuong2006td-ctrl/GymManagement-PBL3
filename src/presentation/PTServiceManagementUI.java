@@ -4,12 +4,15 @@ import business.PTServiceBUS;
 import business.TrainerBUS;
 import model.PTService;
 import model.Trainer;
+import util.RoundedButton;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
@@ -98,10 +101,10 @@ public class PTServiceManagementUI extends JPanel {
         actions.setBorder(BorderFactory.createEmptyBorder(0, 15, 15, 15));
         actions.setBackground(Color.WHITE);
 
-        btnAdd = new JButton("Thêm");
-        btnUpdate = new JButton("Cập nhật");
-        btnDelete = new JButton("Xóa");
-        btnClear = new JButton("Làm mới");
+        btnAdd = new RoundedButton("Thêm", new Color(46, 204, 113));
+        btnUpdate = new RoundedButton("Cập nhật", new Color(52, 152, 219));
+        btnDelete = new RoundedButton("Xóa", new Color(231, 76, 60));
+        btnClear = new RoundedButton("Làm mới", new Color(127, 140, 141));
 
         btnAdd.addActionListener(e -> add());
         btnUpdate.addActionListener(e -> update());
@@ -182,20 +185,32 @@ public class PTServiceManagementUI extends JPanel {
     }
 
     private void showData(List<PTService> list) {
+
         model.setRowCount(0);
+
         NumberFormat fmt = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
 
         for (PTService s : list) {
             model.addRow(new Object[]{
                     s.getServiceID(),
                     s.getServiceName(),
-                    s.getTrainerID(),
+                    getTrainerName(s.getTrainerID()),
                     s.getTotalSessions(),
                     fmt.format(s.getPrice())
             });
         }
+
+        table.setModel(model);
+        styleTable(table); // chỉ gọi ở đây, KHÔNG gọi trong filter
     }
 
+    private String getTrainerName(int id) {
+        return trainerBUS.getAll().stream()
+                .filter(t -> t.getTrainerID() == id)
+                .map(Trainer::getFullName)
+                .findFirst()
+                .orElse("Unknown");
+    }
     /* =====================================================
                            CRUD
        ===================================================== */
@@ -295,15 +310,16 @@ public class PTServiceManagementUI extends JPanel {
 
     private void filter() {
         String key = txtSearch.getText().toLowerCase();
-        showData(
-                services.stream()
-                        .filter(s -> s.getServiceName().toLowerCase().contains(key))
-                        .toList()
-        );
+
+        List<PTService> filtered = services.stream()
+                .filter(s -> s.getServiceName().toLowerCase().contains(key))
+                .toList();
+
+        showData(filtered);
     }
 
     /* =====================================================
-                        COMBOBOX RENDERER
+                        COMBOBOX RENDERERmodel
        ===================================================== */
 
     private static class TrainerRenderer extends DefaultListCellRenderer {
@@ -326,5 +342,36 @@ public class PTServiceManagementUI extends JPanel {
             setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
             return this;
         }
+    }
+
+    private void styleTable(JTable table) {
+
+        table.setRowHeight(30);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+
+        table.setSelectionBackground(new Color(52, 152, 219));
+        table.setSelectionForeground(Color.WHITE);
+
+        table.setGridColor(new Color(230, 230, 230));
+        table.setShowHorizontalLines(true);
+        table.setShowVerticalLines(false);
+        table.setIntercellSpacing(new Dimension(0, 0));
+
+        JTableHeader header = table.getTableHeader();
+        header.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        header.setBackground(new Color(44, 62, 80));
+        header.setForeground(Color.WHITE);
+
+        // ===== ALIGN COLUMN =====
+        DefaultTableCellRenderer center = new DefaultTableCellRenderer();
+        center.setHorizontalAlignment(SwingConstants.CENTER);
+
+        DefaultTableCellRenderer left = new DefaultTableCellRenderer();
+        left.setHorizontalAlignment(SwingConstants.LEFT);
+
+        table.getColumnModel().getColumn(0).setCellRenderer(center); // ID
+        table.getColumnModel().getColumn(1).setCellRenderer(left);   // Name
+        table.getColumnModel().getColumn(2).setCellRenderer(left);   // PT
+        table.getColumnModel().getColumn(3).setCellRenderer(center);  // Sessions
     }
 }

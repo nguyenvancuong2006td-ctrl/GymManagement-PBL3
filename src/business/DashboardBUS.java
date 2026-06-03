@@ -2,6 +2,7 @@ package business;
 
 import data.DashboardDAO;
 import model.DashboardStats;
+import model.Permission;
 
 public class DashboardBUS {
 
@@ -9,17 +10,15 @@ public class DashboardBUS {
 
     public DashboardStats loadDashboard() {
         try {
+            AuthorizationService.check(Permission.DASHBOARD_VIEW);
+
             DashboardStats s = new DashboardStats();
 
             s.setTotalMembers(dao.getTotalMembers());
             s.setActiveMembers(dao.getActiveMembers());
             s.setTotalTrainers(dao.getTotalTrainers());
 
-            s.setTodayInvoices(dao.getTodayInvoices());
-            s.setTodayRevenue(dao.getTodayRevenue());
-            s.setNewMembersToday(dao.getNewMembersToday());
-
-            s.setRevenueLast7Days(dao.getRevenueLast7Days());
+            s.setRevenueByMonth(dao.getRevenueByMonth());
 
             return s;
 

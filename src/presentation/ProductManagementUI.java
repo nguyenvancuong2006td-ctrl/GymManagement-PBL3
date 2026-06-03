@@ -2,6 +2,7 @@ package presentation;
 
 import business.ProductBUS;
 import model.Product;
+import util.RoundedButton;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -11,6 +12,8 @@ import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.math.BigDecimal;
 import java.util.List;
+
+import static util.InvoicePDFExporter.formatMoney;
 
 public class ProductManagementUI extends JPanel {
 
@@ -26,6 +29,7 @@ public class ProductManagementUI extends JPanel {
     private final ProductBUS productBUS = new ProductBUS();
 
     public ProductManagementUI() {
+
         setLayout(new BorderLayout(10,10));
         setBorder(BorderFactory.createEmptyBorder(15,15,15,15));
 
@@ -65,7 +69,10 @@ public class ProductManagementUI extends JPanel {
         lblImage.setPreferredSize(new Dimension(120,120));
         lblImage.setBorder(BorderFactory.createLineBorder(Color.GRAY));
 
-        JButton choose = new JButton("Choose Image");
+        JButton choose = new RoundedButton(
+                "Choose Image",
+                new Color(44, 62, 80)
+        );
         choose.addActionListener(e -> chooseImage());
 
         JPanel img = new JPanel(new BorderLayout());
@@ -84,10 +91,10 @@ public class ProductManagementUI extends JPanel {
         form.add(new JLabel("Price"));    form.add(txtPrice);
         form.add(new JLabel("Quantity")); form.add(txtStock);
 
-        btnAdd = new JButton("Add");
-        btnUpdate = new JButton("Update");
-        btnDelete = new JButton("Delete");
-        btnClear = new JButton("Clear");
+        btnAdd = new RoundedButton("Add", new Color(46,204,113));
+        btnUpdate = new RoundedButton("Update", new Color(52,152,219));
+        btnDelete = new RoundedButton("Delete", new Color(231,76,60));
+        btnClear = new RoundedButton("Clear", new Color(149,165,166));
 
         btnAdd.addActionListener(e -> addProduct());
         btnUpdate.addActionListener(e -> updateProduct());
@@ -132,6 +139,17 @@ public class ProductManagementUI extends JPanel {
         sorter = new TableRowSorter<>(model);
         table.setRowSorter(sorter);
 
+        table.setRowHeight(30);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+
+        table.getTableHeader().setFont(
+                new Font("Segoe UI", Font.BOLD, 13));
+
+        table.getTableHeader().setBackground(
+                new Color(52, 73, 94));
+
+        table.getTableHeader().setForeground(Color.WHITE);
+
         txtSearch.getDocument().addDocumentListener(new DocumentListener() {
             public void insertUpdate(DocumentEvent e) { filter(); }
             public void removeUpdate(DocumentEvent e) { filter(); }
@@ -156,7 +174,7 @@ public class ProductManagementUI extends JPanel {
                     p.getProductID(),
                     p.getProductName(),
                     p.getCategory(),
-                    p.getPrice(),
+                    formatMoney(p.getPrice()),
                     p.getQuantityInitial(),
                     p.getQuantityInStock(),
                     p.getQuantitySold()
@@ -285,14 +303,37 @@ public class ProductManagementUI extends JPanel {
     }
 
     private void chooseImage() {
-        JFileChooser fc = new JFileChooser();
-        if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            txtImage.setText(fc.getSelectedFile().getAbsolutePath());
-            ImageIcon icon = new ImageIcon(txtImage.getText());
-            Image img = icon.getImage().getScaledInstance(
-                    120,120,Image.SCALE_SMOOTH);
-            lblImage.setIcon(new ImageIcon(img));
-            lblImage.setText("");
+
+        try {
+            // Lưu LookAndFeel hiện tại
+            LookAndFeel old = UIManager.getLookAndFeel();
+
+            // Set Windows LookAndFeel CHỈ TẠM THỜI
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+
+            JFileChooser fc = new JFileChooser();
+
+            int result = fc.showOpenDialog(this);
+
+            // Trả lại LookAndFeel cũ
+            UIManager.setLookAndFeel(old);
+
+            if (result == JFileChooser.APPROVE_OPTION) {
+                txtImage.setText(fc.getSelectedFile().getAbsolutePath());
+
+                ImageIcon icon = new ImageIcon(txtImage.getText());
+                Image img = icon.getImage().getScaledInstance(
+                        120, 120, Image.SCALE_SMOOTH
+                );
+
+                lblImage.setIcon(new ImageIcon(img));
+                lblImage.setText("");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
+
+
 }

@@ -55,8 +55,8 @@ public class CheckoutBUS {
                     // InvoiceDetail dùng itemType + itemID
                     InvoiceDetail d = new InvoiceDetail(
                             invoiceID,
-                            "PRODUCT",                      // itemType
-                            product.getProductID(),          // itemID
+                            "PRODUCT",
+                            product.getProductID(),
                             qty,
                             product.getPrice()
                     );

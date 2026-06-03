@@ -1,6 +1,7 @@
 package model;
 
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class DashboardStats {
@@ -10,13 +11,7 @@ public class DashboardStats {
     private int activeMembers;
     private int totalTrainers;
 
-    // Hôm nay
-    private int todayInvoices;
-    private double todayRevenue;
-    private int newMembersToday;
-
-    // Biểu đồ nhẹ
-    private Map<LocalDate, Double> revenueLast7Days;
+    private Map<Integer, Double> revenueByMonth = new LinkedHashMap<>();
 
     public int getTotalMembers() { return totalMembers; }
     public void setTotalMembers(int v) { totalMembers = v; }
@@ -27,15 +22,19 @@ public class DashboardStats {
     public int getTotalTrainers() { return totalTrainers; }
     public void setTotalTrainers(int v) { totalTrainers = v; }
 
-    public int getTodayInvoices() { return todayInvoices; }
-    public void setTodayInvoices(int v) { todayInvoices = v; }
+    public Map<Integer, Double> getRevenueByMonth() {
+        return revenueByMonth;
+    }
 
-    public double getTodayRevenue() { return todayRevenue; }
-    public void setTodayRevenue(double v) { todayRevenue = v; }
+    public void setRevenueByMonth(Map<Integer, Double> revenueByMonth) {
+        this.revenueByMonth = revenueByMonth;
+    }
 
-    public int getNewMembersToday() { return newMembersToday; }
-    public void setNewMembersToday(int v) { newMembersToday = v; }
+    public double getTotalRevenue() {
+        return revenueByMonth.values()
+                .stream()
+                .mapToDouble(v -> v)
+                .sum();
+    }
 
-    public Map<LocalDate, Double> getRevenueLast7Days() { return revenueLast7Days; }
-    public void setRevenueLast7Days(Map<LocalDate, Double> v) { revenueLast7Days = v; }
 }

@@ -3,6 +3,7 @@ package presentation;
 import business.MemberPackageBUS;
 import data.MembershipPackageDAO;
 import model.MembershipPackage;
+import util.RoundedButton;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -71,11 +72,8 @@ public class RegisterPackageDialog extends JDialog {
     private JPanel createButtonPanel() {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 8));
 
-        btnRegister = new JButton("Đăng ký");
-        btnCancel = new JButton("Hủy");
-
-        btnRegister.setBackground(new Color(76, 175, 80));
-        btnRegister.setForeground(Color.WHITE);
+        btnRegister = new RoundedButton("Đăng ký", new Color(41, 128, 185));
+        btnCancel = new RoundedButton("Hủy", new Color(192, 57, 43));
 
         btnRegister.addActionListener(e -> register());
         btnCancel.addActionListener(e -> dispose());
@@ -99,7 +97,6 @@ public class RegisterPackageDialog extends JDialog {
 
             new MemberPackageBUS().registerPackage(memberID, packageID);
 
-            // ✅ QUAN TRỌNG
             selectedPackageID = packageID;
             registered = true;
 

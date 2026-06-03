@@ -63,7 +63,38 @@ public class WorkoutScheduleUI extends JPanel {
 
         cboMemberPT = new JComboBox<>();
         cboMemberPT.setPreferredSize(new Dimension(220, 28));
+        cboMemberPT.setEditable(true);
         loadMemberPT();
+
+        JTextField editor = (JTextField) cboMemberPT.getEditor().getEditorComponent();
+
+        editor.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                filter();
+            }
+
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                filter();
+            }
+
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {}
+
+            private void filter() {
+                String text = editor.getText().toLowerCase();
+
+                cboMemberPT.removeAllItems();
+
+                for (MemberPTItem item : memberPTBUS.getActiveMemberPTItems()) {
+                    if (item.toString().toLowerCase().contains(text)) {
+                        cboMemberPT.addItem(item);
+                    }
+                }
+
+                editor.setText(text);
+                cboMemberPT.showPopup();
+            }
+        });
 
         int y = 0;
 
@@ -205,7 +236,7 @@ public class WorkoutScheduleUI extends JPanel {
         }
     }
 
-    /* ================= ACTION (KHÔNG ĐỔI) ================= */
+    /* ================= ACTION ================= */
 
     private void addSchedule() {
 

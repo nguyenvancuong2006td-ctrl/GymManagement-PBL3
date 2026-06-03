@@ -3,6 +3,7 @@ package presentation;
 import business.CartBUS;
 import business.ProductBUS;
 import model.Product;
+import util.RoundedButton;
 
 import javax.swing.*;
 import java.awt.*;
@@ -31,11 +32,19 @@ public class ProductShopUI extends JPanel {
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
 
-        JLabel title = new JLabel("Product Shop");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        JLabel title = new JLabel(" Product Shop");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        title.setForeground(new Color(0, 102, 204));
         header.add(title, BorderLayout.WEST);
 
-        JButton cartBtn = new JButton("Giỏ hàng");
+
+        JButton cartBtn = new RoundedButton(
+                "Giỏ hàng",
+                new Color(41, 128, 185)
+        );
+        cartBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        cartBtn.setForeground(Color.WHITE);
+        cartBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         cartBtn.addActionListener(e -> {
             JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this);
             new CartUI(frame, cartBUS).setVisible(true);

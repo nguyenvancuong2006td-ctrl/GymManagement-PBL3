@@ -50,24 +50,12 @@ public class CheckInBUS {
     }
 
     /* ================= DỮ LIỆU TAB CHECK-IN ================= */
-
-    /**
-     * Tổng số lượt check-in (COUNT trực tiếp từ DB)
-     */
     public int getTotalCheckIn(String phoneNumber) {
         return checkInDAO.countByPhone(phoneNumber);
     }
-
-    /**
-     * Lần check-in gần nhất
-     */
     public LocalDateTime getLatestCheckIn(String phoneNumber) {
         return checkInDAO.getLatestByPhone(phoneNumber);
     }
-
-    /**
-     * Lịch sử check-in (log)
-     */
     public List<CheckIn> getCheckInHistory(String phoneNumber) {
         return checkInDAO.getByPhone(phoneNumber);
     }

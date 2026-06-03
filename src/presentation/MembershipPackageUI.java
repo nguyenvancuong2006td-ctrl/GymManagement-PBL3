@@ -3,6 +3,7 @@ package presentation;
 import business.MembershipPackageBUS;
 import model.MembershipPackage;
 import model.Role;
+import util.RoundedButton;
 import util.Session;
 
 import javax.swing.*;
@@ -11,6 +12,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -94,10 +96,10 @@ public class MembershipPackageUI extends JPanel {
         g.gridy = 1;
         addFormField(card, g, 0, "Price (₫)", txtPrice);
 
-        btnAdd = primaryButton("Add");
-        btnUpdate = secondaryButton("Update");
-        btnDelete = dangerButton("Delete");
-        btnClear = secondaryButton("Clear");
+        btnAdd = new RoundedButton("Add", new Color(46, 204, 113));
+        btnUpdate = new RoundedButton("Update", new Color(52, 152, 219));
+        btnDelete = new RoundedButton("Delete", new Color(231, 76, 60));
+        btnClear = new RoundedButton("Clear", new Color(149, 165, 166));
 
         btnAdd.addActionListener(e -> addPackage());
         btnUpdate.addActionListener(e -> updatePackage());
@@ -157,6 +159,7 @@ public class MembershipPackageUI extends JPanel {
 
         table = new JTable();
         table.setRowHeight(28);
+        table.setDefaultEditor(Object.class, null);
         styleTable(table);
         table.getSelectionModel().addListSelectionListener(e -> fillFormFromTable());
 
@@ -165,31 +168,6 @@ public class MembershipPackageUI extends JPanel {
 
         wrapper.add(card);
         return wrapper;
-    }
-
-    private void styleTable(JTable table) {
-        table.getTableHeader().setBackground(new Color(245, 246, 248));
-        table.getTableHeader().setForeground(new Color(60, 60, 60));
-        table.setGridColor(new Color(230, 230, 230));
-
-        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(
-                    JTable table, Object value,
-                    boolean isSelected, boolean hasFocus,
-                    int row, int column) {
-
-                Component c = super.getTableCellRendererComponent(
-                        table, value, isSelected, hasFocus, row, column);
-
-                if (!isSelected) {
-                    c.setBackground(row % 2 == 0
-                            ? Color.WHITE
-                            : new Color(248, 248, 248));
-                }
-                return c;
-            }
-        });
     }
 
     /* ================= DATA ================= */
@@ -217,7 +195,6 @@ public class MembershipPackageUI extends JPanel {
 
         table.setModel(model);
 
-        /* ===== RENDERER CHUẨN CĂN LỀ ===== */
 
         // ID – CENTER
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
@@ -332,26 +309,22 @@ public class MembershipPackageUI extends JPanel {
         return p;
     }
 
-    private JButton primaryButton(String t) {
-        JButton b = new JButton(t);
-        b.setBackground(new Color(52, 120, 208));
-        b.setForeground(Color.WHITE);
-        b.setFocusPainted(false);
-        return b;
-    }
+    private void styleTable(JTable table) {
 
-    private JButton secondaryButton(String t) {
-        JButton b = new JButton(t);
-        b.setBackground(new Color(200, 200, 200));
-        b.setFocusPainted(false);
-        return b;
-    }
+        table.setRowHeight(30);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
 
-    private JButton dangerButton(String t) {
-        JButton b = new JButton(t);
-        b.setBackground(new Color(210, 70, 70));
-        b.setForeground(Color.WHITE);
-        b.setFocusPainted(false);
-        return b;
+        table.setSelectionBackground(new Color(52, 152, 219));
+        table.setSelectionForeground(Color.WHITE);
+
+        table.setGridColor(new Color(230, 230, 230));
+        table.setShowHorizontalLines(true);
+        table.setShowVerticalLines(false);
+        table.setIntercellSpacing(new Dimension(0, 0));
+
+        JTableHeader header = table.getTableHeader();
+        header.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        header.setBackground(new Color(44, 62, 80));
+        header.setForeground(Color.WHITE);
     }
 }

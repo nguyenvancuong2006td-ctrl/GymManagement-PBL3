@@ -9,9 +9,6 @@ public enum Role {
 
     // ===== STAFF: NGHIỆP VỤ HÀNG NGÀY =====
     Staff(Set.of(
-            // Dashboard
-            Permission.DASHBOARD_VIEW,
-
             // Member
             Permission.MEMBER_VIEW,
             Permission.MEMBER_ADD,
@@ -23,7 +20,7 @@ public enum Role {
             Permission.TRAINER_UPDATE,
 
             //PTService
-//            Permission.PTService_VIEW,
+            Permission.PTService_VIEW,
 
             // Schedule
             Permission.SCHEDULE_VIEW,
@@ -40,10 +37,7 @@ public enum Role {
             Permission.PAYMENT_VIEW,
             Permission.PAYMENT_CREATE,
             Permission.INVOICE_VIEW,
-            Permission.INVOICE_CREATE,
-
-            // Report
-            Permission.REPORT_VIEW
+            Permission.INVOICE_CREATE
     ));
 
     private final Set<Permission> permissions;

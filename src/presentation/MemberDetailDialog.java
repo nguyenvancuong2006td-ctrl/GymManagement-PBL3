@@ -397,13 +397,12 @@ public class MemberDetailDialog extends JDialog {
         invoiceTable.setRowHeight(28);
 
         // ===== FORMATTER =====
-        DateTimeFormatter dateFmt =
-                DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
         NumberFormat moneyFmt =
                 NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
 
-        // ===== ID – CENTER =====
+        // ===== ID =====
         DefaultTableCellRenderer center = new DefaultTableCellRenderer();
         center.setHorizontalAlignment(SwingConstants.CENTER);
         invoiceTable.getColumnModel().getColumn(0).setCellRenderer(center);
@@ -422,7 +421,7 @@ public class MemberDetailDialog extends JDialog {
                     }
                 });
 
-        // ===== TỔNG TIỀN – GIÁ TIỀN ĐẸP =====
+        // ===== TỔNG TIỀN – GIÁ TIỀN =====
         invoiceTable.getColumnModel().getColumn(2)
                 .setCellRenderer(new DefaultTableCellRenderer() {
                     @Override

@@ -42,11 +42,8 @@ public class InvoicePDFExporter {
             List<InvoiceDetail> details = bus.getInvoiceDetails(invoiceID);
             List<Payment> payments = bus.getPayments(invoiceID);
 
-            // ✅ ADD: tạo thư mục invoices nếu chưa tồn tại
             String dir = "invoices";
             new File(dir).mkdirs();
-
-            // ✅ ADD: lưu file vào thư mục invoices
             String fileName = dir + "/Invoice_" + invoiceID + ".pdf";
 
             PdfWriter writer = new PdfWriter(fileName);

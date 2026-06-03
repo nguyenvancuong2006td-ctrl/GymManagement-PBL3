@@ -5,6 +5,7 @@ import business.StaffBUS;
 import model.Account;
 import model.Staff;
 import model.StaffAccount;
+import util.RoundedButton;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -12,6 +13,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -93,7 +95,10 @@ public class StaffUI extends JPanel {
         txtAccountID = new JTextField();
         txtAccountID.setEditable(false);
 
-        JButton btnCreate = primaryButton("Create Account");
+        JButton btnCreate = new RoundedButton(
+                "Create Account",
+                new Color(52, 120, 208)
+        );
         btnCreate.addActionListener(e -> createAccount());
 
         p.setLayout(new GridBagLayout());
@@ -123,10 +128,18 @@ public class StaffUI extends JPanel {
         txtSalary = new JTextField();
         cbGender = new JComboBox<>(new String[]{"Male", "Female", "Other"});
 
-        JButton btnAdd    = primaryButton("Add");
-        JButton btnUpdate = secondaryButton("Update");
-        JButton btnDelete = dangerButton("Delete");
-        JButton btnClear  = secondaryButton("Clear");
+        JButton btnAdd = new RoundedButton("Thêm", new Color(46, 204, 113));
+        JButton btnUpdate = new RoundedButton("Cập nhật", new Color(52, 152, 219));
+        JButton btnDelete = new RoundedButton("Xóa", new Color(231, 76, 60));
+        JButton btnClear = new RoundedButton("Làm mới", new Color(127, 140, 141));
+
+        Dimension size = new Dimension(100, 35);
+
+        btnAdd.setPreferredSize(size);
+        btnUpdate.setPreferredSize(size);
+        btnDelete.setPreferredSize(size);
+        btnClear.setPreferredSize(size);
+
 
         btnAdd.addActionListener(e -> addStaff());
         btnUpdate.addActionListener(e -> updateAll());
@@ -142,7 +155,7 @@ public class StaffUI extends JPanel {
         addRow(p, g, 3, "Phone", txtPhone);
         addRow(p, g, 4, "Salary", txtSalary);
 
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 8));
         btnPanel.setOpaque(false);
         btnPanel.add(btnAdd);
         btnPanel.add(btnUpdate);
@@ -151,8 +164,12 @@ public class StaffUI extends JPanel {
 
         g.gridx = 1;
         g.gridy = 5;
-        p.add(btnPanel, g);
 
+
+        g.fill = GridBagConstraints.NONE;
+        g.anchor = GridBagConstraints.EAST;
+        g.weightx = 0;
+        p.add(btnPanel, g);
         return p;
     }
 
@@ -174,8 +191,9 @@ public class StaffUI extends JPanel {
 
         table = new JTable();
         table.setRowHeight(28);
+        table.setDefaultEditor(Object.class, null);
         table.getSelectionModel().addListSelectionListener(e -> fillFormFromTable());
-        styleZebraTable(table);
+        styleTable(table);
 
         card.add(txtSearch, BorderLayout.NORTH);
         card.add(new JScrollPane(table), BorderLayout.CENTER);
@@ -185,17 +203,46 @@ public class StaffUI extends JPanel {
 
     /* ================= TABLE STYLE ================= */
 
-    private void styleZebraTable(JTable table) {
-        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+    private void styleTable(JTable table) {
+
+        table.setRowHeight(30);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+
+        table.setSelectionBackground(new Color(52, 152, 219));
+        table.setSelectionForeground(Color.WHITE);
+
+        table.setShowGrid(false);
+        table.setIntercellSpacing(new Dimension(0, 0));
+
+        JTableHeader header = table.getTableHeader();
+        header.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        header.setBackground(new Color(52, 73, 94));
+        header.setForeground(Color.WHITE);
+        header.setReorderingAllowed(false);
+
+        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(
-                    JTable t, Object v, boolean s, boolean f, int r, int c) {
+                    JTable t, Object value, boolean selected,
+                    boolean focus, int row, int col) {
 
-                Component comp = super.getTableCellRendererComponent(t, v, s, f, r, c);
-                if (!s) comp.setBackground(r % 2 == 0 ? Color.WHITE : new Color(248, 248, 248));
-                return comp;
+                Component c = super.getTableCellRendererComponent(
+                        t, value, selected, focus, row, col);
+
+                if (selected) {
+                    c.setBackground(new Color(52, 152, 219));
+                    c.setForeground(Color.WHITE);
+                } else {
+                    c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(245, 245, 245));
+                    c.setForeground(Color.BLACK);
+                }
+
+                setBorder(noFocusBorder);
+                return c;
             }
-        });
+        };
+
+        table.setDefaultRenderer(Object.class, renderer);
     }
 
     /* ================= DATA ================= */
@@ -230,6 +277,7 @@ public class StaffUI extends JPanel {
         }
 
         table.setModel(m);
+        styleTable(table);
 
         // ===== FORMAT SALARY – LEFT ALIGN =====
         NumberFormat nf = NumberFormat.getInstance(new Locale("vi", "VN"));
@@ -402,23 +450,5 @@ public class StaffUI extends JPanel {
         p.add(f, g);
     }
 
-    private JButton primaryButton(String t) {
-        JButton b = new JButton(t);
-        b.setBackground(new Color(52,120,208));
-        b.setForeground(Color.WHITE);
-        return b;
-    }
 
-    private JButton secondaryButton(String t) {
-        JButton b = new JButton(t);
-        b.setBackground(new Color(200,200,200));
-        return b;
-    }
-
-    private JButton dangerButton(String t) {
-        JButton b = new JButton(t);
-        b.setBackground(new Color(210,70,70));
-        b.setForeground(Color.WHITE);
-        return b;
-    }
 }

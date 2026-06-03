@@ -1,6 +1,7 @@
 package presentation;
 
 import business.ReportBUS;
+import util.RoundedButton;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -38,8 +39,8 @@ public class ReportPanel extends JPanel {
         spFrom.setEditor(new JSpinner.DateEditor(spFrom, "dd/MM/yyyy"));
         spTo.setEditor(new JSpinner.DateEditor(spTo, "dd/MM/yyyy"));
 
-        JButton btnView = new JButton("Xem báo cáo");
-        JButton btnPdf = new JButton("Xuất PDF");
+        JButton btnView = new RoundedButton("Xem báo cáo", new Color(52, 152, 219));
+        JButton btnPdf  = new RoundedButton("Xuất PDF", new Color(46, 204, 113));
 
         filter.add(btnPdf);
         filter.add(cbType);

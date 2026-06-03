@@ -1,0 +1,19 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="GymManagement:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/GymManagement_jar</output-path>
+    <root id="archive" name="GymManagement.jar">
+      <element id="module-output" name="GymManagement" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/iText-Core-9.6.0-only-jars/font-asian-9.6.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/slf4j-api-2.0.17.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/javase-3.5.3.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/iText-Core-9.6.0-only-jars/kernel-9.6.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/slf4j-simple-2.0.17.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/core-3.5.3.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/sqljdbc_13.2.1.0_enu/sqljdbc_13.2/enu/jars/mssql-jdbc-13.2.1.jre11.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/flatlaf-3.7.1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/iText-Core-9.6.0-only-jars/commons-9.6.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/iText-Core-9.6.0-only-jars/io-9.6.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/iText-Core-9.6.0-only-jars/layout-9.6.0.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

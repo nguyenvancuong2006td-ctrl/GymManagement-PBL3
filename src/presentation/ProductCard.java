@@ -2,6 +2,7 @@ package presentation;
 
 import business.CartBUS;
 import model.Product;
+import util.RoundedButton;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -51,27 +52,25 @@ public class ProductCard extends JPanel {
         name.setFont(new Font("Segoe UI", Font.BOLD, 13));
         name.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        /* ===== PRICE (ĐÃ FORMAT ĐÚNG) ===== */
+        /* ===== PRICE ===== */
         JLabel price = new JLabel(formatMoney(product.getPrice()), SwingConstants.CENTER);
         price.setFont(new Font("Segoe UI", Font.BOLD, 15));
         price.setForeground(new Color(231, 76, 60));
         price.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         /* ===== QUANTITY ===== */
-        JButton minus = new JButton("-");
-        JButton plus  = new JButton("+");
+
+        JButton minus = new RoundedButton("-", new Color(231, 76, 60)); // đỏ (giảm)
+        JButton plus  = new RoundedButton("+", new Color(46, 204, 113)); // xanh (tăng)
         JLabel qtyLabel = new JLabel("1", SwingConstants.CENTER);
 
-        // ✅ FONT RÕ RÀNG
         Font btnFont = new Font("Segoe UI", Font.BOLD, 14);
         minus.setFont(btnFont);
         plus.setFont(btnFont);
 
-        // ✅ XÓA PADDING MẶC ĐỊNH (QUAN TRỌNG)
         minus.setMargin(new Insets(0, 0, 0, 0));
         plus.setMargin(new Insets(0, 0, 0, 0));
 
-        // ✅ KHÔNG DÙNG setPreferredSize
         minus.setMaximumSize(new Dimension(45, 28));
         plus.setMaximumSize(new Dimension(45, 28));
 
@@ -101,8 +100,7 @@ public class ProductCard extends JPanel {
 
 
         /* ===== ADD TO CART ===== */
-        JButton addToCart = new JButton("Add to Cart");
-        addToCart.setBackground(new Color(33, 123, 244));
+        JButton addToCart = new RoundedButton("Add to Cart",new Color(33, 123, 244));
         addToCart.setForeground(Color.WHITE);
         addToCart.setFocusPainted(false);
         addToCart.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -139,7 +137,7 @@ public class ProductCard extends JPanel {
         add(addToCart);
     }
 
-    /* ===== FORMAT MONEY (ĐÚNG VỊ TRÍ) ===== */
+    /* ===== FORMAT MONEY  ===== */
     private String formatMoney(BigDecimal value) {
         NumberFormat nf = NumberFormat.getInstance(new Locale("vi", "VN"));
         nf.setMaximumFractionDigits(0);

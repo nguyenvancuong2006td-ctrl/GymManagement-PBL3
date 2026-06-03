@@ -89,7 +89,6 @@ public class ReportPDF {
             Table table = new Table(model.getColumnCount())
                     .setWidth(UnitValue.createPercentValue(100));
 
-            // Header
             for (int c = 0; c < model.getColumnCount(); c++) {
                 table.addHeaderCell(
                         new Cell()
@@ -101,7 +100,6 @@ public class ReportPDF {
 
             double totalRevenue = 0;
 
-            // Data
             for (int r = 0; r < model.getRowCount(); r++) {
                 for (int c = 0; c < model.getColumnCount(); c++) {
                     Object value = model.getValueAt(r, c);

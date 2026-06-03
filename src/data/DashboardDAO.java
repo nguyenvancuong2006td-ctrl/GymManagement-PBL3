@@ -3,112 +3,90 @@ package data;
 import util.DBConnection;
 
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class DashboardDAO {
 
+    /* ================= TOTAL MEMBERS ================= */
     public int getTotalMembers() throws SQLException {
+
         String sql = "SELECT COUNT(*) FROM Member";
+
         try (Connection c = DBConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-            rs.next();
-            return rs.getInt(1);
+
+            return rs.next() ? rs.getInt(1) : 0;
         }
     }
 
+    /* ================= ACTIVE MEMBERS ================= */
     public int getActiveMembers() throws SQLException {
+
         String sql = """
             SELECT COUNT(DISTINCT p.memberID)
             FROM Payment p
             JOIN MembershipPackage mp ON p.packageID = mp.packageID
             WHERE p.status = 'Completed'
+              AND p.paymentDate IS NOT NULL
               AND DATEADD(DAY, mp.duration, p.paymentDate) >= GETDATE()
         """;
+
         try (Connection c = DBConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-            rs.next();
-            return rs.getInt(1);
+
+            return rs.next() ? rs.getInt(1) : 0;
         }
     }
 
+    /* ================= TOTAL TRAINERS ================= */
     public int getTotalTrainers() throws SQLException {
+
         String sql = "SELECT COUNT(*) FROM Trainer";
+
         try (Connection c = DBConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-            rs.next();
-            return rs.getInt(1);
+
+            return rs.next() ? rs.getInt(1) : 0;
         }
     }
 
-    public int getTodayInvoices() throws SQLException {
+    /* ================= REVENUE BY MONTH ================= */
+    public Map<Integer, Double> getRevenueByMonth() throws SQLException {
+
         String sql = """
-            SELECT COUNT(*)
+            SELECT MONTH(paymentDate) AS month,
+                   SUM(amount) AS total
             FROM Payment
             WHERE status = 'Completed'
-              AND CAST(paymentDate AS DATE) = CAST(GETDATE() AS DATE)
+              AND paymentDate IS NOT NULL
+              AND YEAR(paymentDate) = YEAR(GETDATE())
+            GROUP BY MONTH(paymentDate)
         """;
-        try (Connection c = DBConnection.getConnection();
-             PreparedStatement ps = c.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            rs.next();
-            return rs.getInt(1);
+
+        Map<Integer, Double> map = new LinkedHashMap<>();
+
+        // luôn đủ 12 tháng
+        for (int i = 1; i <= 12; i++) {
+            map.put(i, 0.0);
         }
-    }
-
-    public double getTodayRevenue() throws SQLException {
-        String sql = """
-            SELECT ISNULL(SUM(amount),0)
-            FROM Payment
-            WHERE status = 'Completed'
-              AND CAST(paymentDate AS DATE) = CAST(GETDATE() AS DATE)
-        """;
-        try (Connection c = DBConnection.getConnection();
-             PreparedStatement ps = c.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            rs.next();
-            return rs.getDouble(1);
-        }
-    }
-
-    public int getNewMembersToday() throws SQLException {
-        String sql = """
-            SELECT COUNT(*)
-            FROM Member
-            WHERE CAST(joinDate AS DATE) = CAST(GETDATE() AS DATE)
-        """;
-        try (Connection c = DBConnection.getConnection();
-             PreparedStatement ps = c.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            rs.next();
-            return rs.getInt(1);
-        }
-    }
-
-    public Map<LocalDate, Double> getRevenueLast7Days() throws SQLException {
-        String sql = """
-            SELECT CAST(paymentDate AS DATE), SUM(amount)
-            FROM Payment
-            WHERE status = 'Completed'
-              AND paymentDate >= DATEADD(DAY,-6,GETDATE())
-            GROUP BY CAST(paymentDate AS DATE)
-            ORDER BY CAST(paymentDate AS DATE)
-        """;
-
-        Map<LocalDate, Double> map = new LinkedHashMap<>();
 
         try (Connection c = DBConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                map.put(rs.getDate(1).toLocalDate(), rs.getDouble(2));
+
+                int month = rs.getInt("month");
+                double total = rs.getDouble("total");
+
+                map.put(month, total);
             }
         }
+
         return map;
     }
 }
