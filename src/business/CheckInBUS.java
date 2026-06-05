@@ -34,6 +34,15 @@ public class CheckInBUS {
             throw new Exception("Gói tập đã hết hạn hoặc chưa đăng ký");
         }
 
+        if (java.time.LocalDate.now().isBefore(pkg.getStartDate())) {
+
+            throw new Exception(
+                    "Gói tập chưa đến ngày sử dụng.\n" +
+                            "Ngày bắt đầu: " +
+                            pkg.getStartDate()
+            );
+        }
+
         // Không cho check-in trùng ngày
         if (checkInDAO.hasCheckedInToday(phoneNumber)) {
             throw new Exception("Hội viên đã check-in hôm nay");
@@ -46,7 +55,7 @@ public class CheckInBUS {
 
         checkInDAO.insert(checkIn);
 
-        return member; // trả về MEMBER thật cho UI
+        return member;
     }
 
     /* ================= DỮ LIỆU TAB CHECK-IN ================= */

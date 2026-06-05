@@ -25,13 +25,10 @@ public class DashboardDAO {
     public int getActiveMembers() throws SQLException {
 
         String sql = """
-            SELECT COUNT(DISTINCT p.memberID)
-            FROM Payment p
-            JOIN MembershipPackage mp ON p.packageID = mp.packageID
-            WHERE p.status = 'Completed'
-              AND p.paymentDate IS NOT NULL
-              AND DATEADD(DAY, mp.duration, p.paymentDate) >= GETDATE()
-        """;
+        SELECT COUNT(DISTINCT memberID)
+        FROM MemberPackage
+        WHERE endDate >= CAST(GETDATE() AS DATE)
+    """;
 
         try (Connection c = DBConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql);

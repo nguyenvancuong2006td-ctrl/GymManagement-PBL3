@@ -8,6 +8,8 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 public class ReportDAO {
 
@@ -28,8 +30,21 @@ public class ReportDAO {
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setDate(1, Date.valueOf(from));
-            ps.setDate(2, Date.valueOf(to));
+            LocalDateTime start =
+                    from.atStartOfDay();
+
+            LocalDateTime end =
+                    to.atTime(23,59,59);
+
+            ps.setTimestamp(
+                    1,
+                    Timestamp.valueOf(start)
+            );
+
+            ps.setTimestamp(
+                    2,
+                    Timestamp.valueOf(end)
+            );
 
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -95,8 +110,21 @@ public class ReportDAO {
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setDate(1, Date.valueOf(from));
-            ps.setDate(2, Date.valueOf(to));
+            LocalDateTime start =
+                    from.atStartOfDay();
+
+            LocalDateTime end =
+                    to.atTime(23,59,59);
+
+            ps.setTimestamp(
+                    1,
+                    Timestamp.valueOf(start)
+            );
+
+            ps.setTimestamp(
+                    2,
+                    Timestamp.valueOf(end)
+            );
 
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {

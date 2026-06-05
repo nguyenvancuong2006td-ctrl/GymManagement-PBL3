@@ -40,7 +40,7 @@ public class MemberPackageDAO {
             SELECT TOP 1 *
             FROM MemberPackage
             WHERE memberID = ?
-              AND status = 'ACTIVE'
+              AND status = 'Active'
               AND endDate >= CAST(GETDATE() AS DATE)
             ORDER BY endDate DESC
         """;

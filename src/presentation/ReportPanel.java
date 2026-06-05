@@ -7,8 +7,9 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Date;
+import com.github.lgooddatepicker.components.DatePicker;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.DefaultTableCellRenderer;
 
 public class ReportPanel extends JPanel {
 
@@ -16,7 +17,8 @@ public class ReportPanel extends JPanel {
     private final DefaultTableModel model;
     private final JTable table;
     private final JComboBox<String> cbType;
-    private final JSpinner spFrom, spTo;
+    private final DatePicker dpFrom;
+    private final DatePicker dpTo;
 
     public ReportPanel() {
 
@@ -33,11 +35,11 @@ public class ReportPanel extends JPanel {
                 "Hội viên sắp hết hạn gói"
         });
 
-        spFrom = new JSpinner(new SpinnerDateModel());
-        spTo   = new JSpinner(new SpinnerDateModel());
+        dpFrom = createDatePicker();
+        dpTo = createDatePicker();
 
-        spFrom.setEditor(new JSpinner.DateEditor(spFrom, "dd/MM/yyyy"));
-        spTo.setEditor(new JSpinner.DateEditor(spTo, "dd/MM/yyyy"));
+        dpFrom.setDate(LocalDate.now().withDayOfMonth(1));
+        dpTo.setDate(LocalDate.now());
 
         JButton btnView = new RoundedButton("Xem báo cáo", new Color(52, 152, 219));
         JButton btnPdf  = new RoundedButton("Xuất PDF", new Color(46, 204, 113));
@@ -45,9 +47,9 @@ public class ReportPanel extends JPanel {
         filter.add(btnPdf);
         filter.add(cbType);
         filter.add(new JLabel("Từ ngày:"));
-        filter.add(spFrom);
+        filter.add(dpFrom);
         filter.add(new JLabel("Đến ngày:"));
-        filter.add(spTo);
+        filter.add(dpTo);
         filter.add(btnView);
 
         add(filter, BorderLayout.NORTH);
@@ -66,6 +68,7 @@ public class ReportPanel extends JPanel {
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.getTableHeader().setReorderingAllowed(false);
         table.setFocusable(false);
+        styleTable();
 
         add(new JScrollPane(table), BorderLayout.CENTER);
 
@@ -80,8 +83,11 @@ public class ReportPanel extends JPanel {
 
         model.setRowCount(0);
 
-        LocalDate from = toLocal((Date) spFrom.getValue());
-        LocalDate to   = toLocal((Date) spTo.getValue());
+        LocalDate from = dpFrom.getDate();
+        LocalDate to = dpTo.getDate();
+
+        if (from == null) from = LocalDate.MIN;
+        if (to == null) to = LocalDate.MAX;
 
         if (cbType.getSelectedIndex() == 0) {
 
@@ -124,11 +130,9 @@ public class ReportPanel extends JPanel {
             return;
         }
 
-        // Tạo thư mục reports nếu chưa có
         String dir = "reports";
         new java.io.File(dir).mkdirs();
 
-        //  Đặt tên file tự động (giống hóa đơn)
         String title;
         String fileName;
 
@@ -187,9 +191,86 @@ public class ReportPanel extends JPanel {
         });
     }
 
-    private LocalDate toLocal(Date d) {
-        return d.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();
+
+    private DatePicker createDatePicker() {
+
+        DatePicker picker = new DatePicker();
+
+        picker.getSettings()
+                .setFormatForDatesCommonEra("dd/MM/yyyy");
+
+        picker.setPreferredSize(
+                new Dimension(180, 32)
+        );
+
+        JButton btn =
+                picker.getComponentToggleCalendarButton();
+
+        btn.setText("Chọn");
+        btn.setPreferredSize(
+                new Dimension(45, 32)
+        );
+
+        return picker;
+    }
+
+    private void styleTable() {
+
+        table.setRowHeight(32);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+
+        table.setSelectionBackground(new Color(52, 152, 219));
+        table.setSelectionForeground(Color.WHITE);
+
+        table.setGridColor(new Color(230, 230, 230));
+        table.setShowHorizontalLines(true);
+        table.setShowVerticalLines(false);
+
+        JTableHeader header = table.getTableHeader();
+
+        header.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        header.setBackground(new Color(44, 62, 80));
+        header.setForeground(Color.WHITE);
+        header.setReorderingAllowed(false);
+
+        DefaultTableCellRenderer center = new DefaultTableCellRenderer();
+        center.setHorizontalAlignment(SwingConstants.CENTER);
+
+        table.setDefaultRenderer(Object.class,
+                new DefaultTableCellRenderer() {
+
+                    @Override
+                    public Component getTableCellRendererComponent(
+                            JTable table,
+                            Object value,
+                            boolean isSelected,
+                            boolean hasFocus,
+                            int row,
+                            int column) {
+
+                        Component c =
+                                super.getTableCellRendererComponent(
+                                        table,
+                                        value,
+                                        isSelected,
+                                        hasFocus,
+                                        row,
+                                        column);
+
+                        if (!isSelected) {
+                            c.setBackground(
+                                    row % 2 == 0
+                                            ? Color.WHITE
+                                            : new Color(245, 245, 245)
+                            );
+                        }
+
+                        setHorizontalAlignment(
+                                SwingConstants.CENTER
+                        );
+
+                        return c;
+                    }
+                });
     }
 }

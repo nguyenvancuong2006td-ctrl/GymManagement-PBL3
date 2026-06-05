@@ -175,7 +175,15 @@ public class MemberDetailDialog extends JDialog {
         g.gridx = 0; g.gridy = 2;
         detailCard.add(detailLabel("Ngày tham gia:"), g);
         g.gridx = 1;
-        detailCard.add(detailValue(m.getJoinDate().toString()), g);
+
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+        detailCard.add(detailValue(
+                m.getJoinDate() != null
+                        ? m.getJoinDate().format(fmt)
+                        : ""
+        ), g);
+
 
         root.add(detailCard, BorderLayout.CENTER);
 

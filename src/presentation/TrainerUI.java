@@ -240,6 +240,27 @@ public class TrainerUI extends JPanel {
             }
         }
         table.setModel(model);
+
+        // ===== ID (CENTER) =====
+        DefaultTableCellRenderer center = new DefaultTableCellRenderer();
+        center.setHorizontalAlignment(SwingConstants.CENTER);
+        table.getColumnModel().getColumn(0).setCellRenderer(center);
+
+// ===== NAME (LEFT) =====
+        DefaultTableCellRenderer left = new DefaultTableCellRenderer();
+        left.setHorizontalAlignment(SwingConstants.LEFT);
+        table.getColumnModel().getColumn(1).setCellRenderer(left);
+
+        table.getColumnModel().getColumn(2).setCellRenderer(center);
+
+        table.getColumnModel().getColumn(3).setCellRenderer(center);
+
+        DefaultTableCellRenderer right = new DefaultTableCellRenderer();
+        right.setHorizontalAlignment(SwingConstants.RIGHT);
+        table.getColumnModel().getColumn(4).setCellRenderer(right);
+
+// ===== HIRE DATE (CENTER) =====
+        table.getColumnModel().getColumn(5).setCellRenderer(center);
     }
 
     /* ================= CRUD ================= */

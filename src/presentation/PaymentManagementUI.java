@@ -127,6 +127,7 @@ public class PaymentManagementUI extends JPanel {
 
     private void filterAndShow() {
 
+        allInvoices = invoiceBUS.getAllInvoices();
         model.setRowCount(0);
 
         if (allInvoices == null) return;

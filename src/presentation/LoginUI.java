@@ -38,7 +38,7 @@ public class LoginUI extends JFrame {
         JPanel left = new JPanel() {
 
             private final Image gymImage =
-                    new ImageIcon("images/gym.jpg")
+                    new ImageIcon("images/gym.png")
                             .getImage();
 
             @Override
@@ -86,19 +86,19 @@ public class LoginUI extends JFrame {
         /* ---------- RIGHT PANEL ---------- */
         JPanel right = new JPanel(null);
         right.setBounds(400, 0, 500, 500);
-        right.setBackground(Color.WHITE);
+        right.setBackground(new Color(242, 247, 245));
 
         // ===== TITLE =====
         JLabel lblLogin = new JLabel("LOGIN");
         lblLogin.setFont(new Font("Segoe UI", Font.BOLD, 36));
-        lblLogin.setForeground(new Color(20, 90, 160));
+        lblLogin.setForeground(new Color(35, 110, 190));
         lblLogin.setHorizontalAlignment(SwingConstants.CENTER);
         lblLogin.setBounds(100, 40, 300, 40);
         right.add(lblLogin);
 
         JLabel lblWelcome = new JLabel("Welcome Back!");
         lblWelcome.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        lblWelcome.setForeground(new Color(120, 120, 120));
+        lblWelcome.setForeground(new Color(130, 150, 180));
         lblWelcome.setHorizontalAlignment(SwingConstants.CENTER);
         lblWelcome.setBounds(100, 80, 300, 25);
         right.add(lblWelcome);

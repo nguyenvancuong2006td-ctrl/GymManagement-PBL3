@@ -201,21 +201,21 @@ public class MembershipPackageUI extends JPanel {
         centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
         table.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
 
-        // NAME – LEFT
-        DefaultTableCellRenderer leftRenderer = new DefaultTableCellRenderer();
-        leftRenderer.setHorizontalAlignment(SwingConstants.LEFT);
-        table.getColumnModel().getColumn(1).setCellRenderer(leftRenderer);
+        // NAME – CENTER
+        DefaultTableCellRenderer centerNameRenderer = new DefaultTableCellRenderer();
+        centerNameRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        table.getColumnModel().getColumn(1).setCellRenderer(centerNameRenderer);
 
         // DURATION – CENTER
         table.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
 
-        // PRICE – FORMAT + LEFT
+        // PRICE – FORMAT + CENTER
         table.getColumnModel().getColumn(3).setCellRenderer(
                 new DefaultTableCellRenderer() {
                     @Override
                     protected void setValue(Object value) {
                         if (value instanceof Number) {
-                            setHorizontalAlignment(SwingConstants.LEFT);
+                            setHorizontalAlignment(SwingConstants.CENTER);
                             setText(priceFormat.format(value));
                         } else {
                             setText("");

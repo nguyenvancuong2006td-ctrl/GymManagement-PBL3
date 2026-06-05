@@ -132,7 +132,6 @@ public class MemberUI extends JPanel {
 
         table = new JTable();
         table.setRowHeight(26);
-        //khóa chỉnh sửa trong table
         table.setDefaultEditor(Object.class, null);
         table.getSelectionModel().addListSelectionListener(e -> fillForm());
 
