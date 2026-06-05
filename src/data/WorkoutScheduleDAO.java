@@ -39,7 +39,8 @@ public class WorkoutScheduleDAO {
             int trainerID,
             LocalDate date,
             LocalTime newStart,
-            LocalTime newEnd) {
+            LocalTime newEnd,
+            int scheduleID) {
 
         String sql = """
         SELECT 1
@@ -47,6 +48,7 @@ public class WorkoutScheduleDAO {
         WHERE trainerID = ?
           AND date = ?
           AND status = 'BOOKED'
+          AND scheduleID <> ?
           AND NOT (
                 endTime <= CAST(? AS TIME)
              OR startTime >= CAST(? AS TIME)
@@ -58,8 +60,9 @@ public class WorkoutScheduleDAO {
 
             ps.setInt(1, trainerID);
             ps.setDate(2, java.sql.Date.valueOf(date));
-            ps.setTime(3, java.sql.Time.valueOf(newStart));
-            ps.setTime(4, java.sql.Time.valueOf(newEnd));
+            ps.setInt(3, scheduleID);
+            ps.setTime(4, java.sql.Time.valueOf(newStart));
+            ps.setTime(5, java.sql.Time.valueOf(newEnd));
 
             return ps.executeQuery().next();
 
@@ -77,6 +80,7 @@ public class WorkoutScheduleDAO {
 
         String sql = """
             SELECT
+                ws.scheduleID,
                 ws.date,
                 ws.startTime,
                 ws.endTime,
@@ -96,6 +100,7 @@ public class WorkoutScheduleDAO {
 
             while (rs.next()) {
                 list.add(new Object[]{
+                        rs.getInt("scheduleID"),
                         rs.getDate("date"),
                         rs.getTime("startTime"),
                         rs.getTime("endTime"),
@@ -148,6 +153,52 @@ public class WorkoutScheduleDAO {
         }
 
         return list;
+    }
+
+    public boolean delete(int scheduleID) {
+
+        String sql = "DELETE FROM WorkoutSchedule WHERE scheduleID=?";
+
+        try (Connection c = DBConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+            ps.setInt(1, scheduleID);
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Delete failed", e);
+        }
+    }
+
+    public boolean update(WorkoutSchedule ws) {
+
+        String sql = """
+        UPDATE WorkoutSchedule
+        SET date=?,
+            startTime=?,
+            endTime=?,
+            memberPTID=?,
+            trainerID=?,
+            status=?
+        WHERE scheduleID=?
+    """;
+
+        try (Connection c = DBConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+            ps.setDate(1, java.sql.Date.valueOf(ws.getDate()));
+            ps.setTime(2, java.sql.Time.valueOf(ws.getStartTime()));
+            ps.setTime(3, java.sql.Time.valueOf(ws.getEndTime()));
+            ps.setInt(4, ws.getMemberPTID());
+            ps.setInt(5, ws.getTrainerID());
+            ps.setString(6, ws.getStatus());
+            ps.setInt(7, ws.getScheduleID());
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Update failed", e);
+        }
     }
 
 }
