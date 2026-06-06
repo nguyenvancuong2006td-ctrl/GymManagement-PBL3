@@ -84,6 +84,7 @@ public class WorkoutScheduleDAO {
                 ws.date,
                 ws.startTime,
                 ws.endTime,
+                ws.memberPTID,
                 m.fullName AS memberName,
                 t.fullName AS trainerName,
                 ws.status
@@ -104,6 +105,7 @@ public class WorkoutScheduleDAO {
                         rs.getDate("date"),
                         rs.getTime("startTime"),
                         rs.getTime("endTime"),
+                        rs.getInt("memberPTID"),
                         rs.getString("memberName"),
                         rs.getString("trainerName"),
                         rs.getString("status")

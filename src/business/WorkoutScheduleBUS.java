@@ -3,6 +3,8 @@ package business;
 import data.WorkoutScheduleDAO;
 import model.WorkoutSchedule;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 public class WorkoutScheduleBUS {
@@ -66,5 +68,15 @@ public class WorkoutScheduleBUS {
         if (!dao.delete(scheduleID)) {
             throw new RuntimeException("Xóa lịch thất bại");
         }
+    }
+
+    public boolean isConflict(WorkoutSchedule ws) {
+        return dao.isSlotBooked(
+                ws.getTrainerID(),
+                ws.getDate(),
+                ws.getStartTime(),
+                ws.getEndTime(),
+                ws.getScheduleID()
+        );
     }
 }

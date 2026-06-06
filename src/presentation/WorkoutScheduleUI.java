@@ -76,6 +76,8 @@ public class WorkoutScheduleUI extends JPanel {
         tpStart = new TimePicker();
         tpEnd = new TimePicker();
 
+        dpDate.getComponentToggleCalendarButton().setText("Chọn");
+
         cboMemberPT = new JComboBox<>();
 
         int y = 0;
@@ -118,13 +120,18 @@ public class WorkoutScheduleUI extends JPanel {
         p.setBackground(Color.WHITE);
 
         model = new DefaultTableModel(
-                new String[]{"ID", "Ngày", "Bắt đầu", "Kết thúc", "Hội viên", "PT", "Trạng thái"},
+                new String[]{"ID", "Ngày", "Bắt đầu", "Kết thúc","MemberPTID", "Hội viên", "PT", "Trạng thái"},
                 0
         );
 
         table = new JTable(model);
         table.setRowHeight(25);
         table.setDefaultEditor(Object.class, null);
+
+        // Ẩn cột MemberPTID (cột index 4)
+        table.getColumnModel().getColumn(4).setMinWidth(0);
+        table.getColumnModel().getColumn(4).setMaxWidth(0);
+        table.getColumnModel().getColumn(4).setWidth(0);
 
         JScrollPane scroll = new JScrollPane(table);
         p.add(scroll, BorderLayout.CENTER);
@@ -189,16 +196,17 @@ public class WorkoutScheduleUI extends JPanel {
             }
 
             // ===== MEMBER PT =====
-            String memberName = model.getValueAt(row, 4).toString();
+            int memberPTID = Integer.parseInt(model.getValueAt(row, 4).toString());
 
             for (int i = 0; i < cboMemberPT.getItemCount(); i++) {
                 MemberPTItem item = cboMemberPT.getItemAt(i);
 
-                if (item.toString().equals(memberName)) {
+                if (item.getMemberPTID() == memberPTID) {
                     cboMemberPT.setSelectedIndex(i);
                     break;
                 }
             }
+
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -227,12 +235,34 @@ public class WorkoutScheduleUI extends JPanel {
             return;
         }
 
+
         WorkoutSchedule ws = new WorkoutSchedule();
         ws.setDate(date);
         ws.setStartTime(start);
         ws.setEndTime(end);
         ws.setMemberPTID(item.getMemberPTID());
         ws.setTrainerID(item.getTrainerID());
+
+        // 🔥 CHECK TRÙNG LỊCH
+        boolean conflict = scheduleBUS.isConflict(ws);
+
+        if (conflict) {
+
+            int choice = JOptionPane.showOptionDialog(
+                    this,
+                    "Cập nhật sẽ bị trùng lịch!\nBạn có muốn ghi đè không?",
+                    "Trùng lịch",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE,
+                    null,
+                    new Object[]{"Ghi đè", "Hủy"},
+                    "Hủy"
+            );
+
+            if (choice != JOptionPane.YES_OPTION) {
+                return;
+            }
+        }
 
         scheduleBUS.register(ws);
         loadTable();
@@ -259,6 +289,27 @@ public class WorkoutScheduleUI extends JPanel {
         ws.setTrainerID(item.getTrainerID());
         ws.setStatus("BOOKED");
 
+        // 🔥 CHECK TRÙNG LỊCH
+        boolean conflict = scheduleBUS.isConflict(ws);
+
+        if (conflict) {
+
+            int choice = JOptionPane.showOptionDialog(
+                    this,
+                    "Cập nhật sẽ bị trùng lịch!\nBạn có muốn ghi đè không?",
+                    "Trùng lịch",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE,
+                    null,
+                    new Object[]{"Ghi đè", "Hủy"},
+                    "Hủy"
+            );
+
+            if (choice != JOptionPane.YES_OPTION) {
+                return;
+            }
+        }
+
         scheduleBUS.update(ws);
         loadTable();
     }
@@ -284,6 +335,7 @@ public class WorkoutScheduleUI extends JPanel {
         tpStart.setTime(null);
         tpEnd.setTime(null);
         table.clearSelection();
+        cboMemberPT.setSelectedIndex(-1);
     }
 
     /* ================= UTIL ================= */
