@@ -130,12 +130,7 @@ public class RegisterPackageDialog extends JDialog {
             if (startDate == null) {
                 startDate = java.time.LocalDate.now();
             }
-            new MemberPackageBUS()
-                    .registerPackage(
-                            memberID,
-                            packageID,
-                            startDate
-                    );
+
             selectedPackageID = packageID;
             registered = true;
 

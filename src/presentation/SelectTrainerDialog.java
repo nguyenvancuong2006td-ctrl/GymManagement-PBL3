@@ -23,7 +23,7 @@ public class SelectTrainerDialog extends JDialog {
         List<Trainer> list = bus.getAll();
 
         DefaultTableModel model = new DefaultTableModel(
-                new String[]{"ID", "Tên huấn luyện viên"}, 0
+                new String[]{"ID", "Tên huấn luyện viên", "Giới tính" , " Số điện thoại"}, 0
         ) {
             public boolean isCellEditable(int r, int c) {
                 return false;
@@ -33,7 +33,9 @@ public class SelectTrainerDialog extends JDialog {
         for (Trainer t : list) {
             model.addRow(new Object[]{
                     t.getTrainerID(),
-                    t.getFullName()
+                    t.getFullName(),
+                    t.getGender(),
+                    t.getPhoneNumber()
             });
         }
 

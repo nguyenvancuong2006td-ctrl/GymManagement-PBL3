@@ -7,14 +7,16 @@ public class MembershipPackage {
     private String packageName;
     private int duration;
     private double price;
+    private String durationType;
 
     public MembershipPackage() {}
 
-    public MembershipPackage(int packageID, String packageName, int duration, double price) {
+    public MembershipPackage(int packageID, String packageName, int duration, double price, String durationType) {
         this.packageID = packageID;
         this.packageName = packageName;
         this.duration = duration;
         this.price = price;
+        this.durationType = durationType;
     }
 
     public int getPackageID() { return packageID; }
@@ -28,6 +30,14 @@ public class MembershipPackage {
 
     public double getPrice() { return price; }
     public void setPrice(double price) { this.price = price; }
+
+    public String getDurationType() {
+        return durationType;
+    }
+
+    public void setDurationType(String durationType) {
+        this.durationType = durationType;
+    }
 
 
     @Override
@@ -45,6 +55,9 @@ public class MembershipPackage {
 
     @Override
     public String toString() {
+        if ("DAY".equalsIgnoreCase(durationType)) {
+            return packageName + " (" + duration + " ngày)";
+        }
         return packageName + " (" + duration + " tháng)";
     }
 

@@ -7,6 +7,7 @@ public class CheckIn {
     private int checkInID;
     private String phoneNumber;
     private LocalDateTime checkInTime;
+    private LocalDateTime checkOutTime;
 
     // ===== CONSTRUCTOR =====
     public CheckIn() {}
@@ -40,4 +41,13 @@ public class CheckIn {
     public void setCheckInTime(LocalDateTime checkInTime) {
         this.checkInTime = checkInTime;
     }
+
+    public LocalDateTime getCheckOutTime() {
+        return checkOutTime;
+    }
+
+    public void setCheckOutTime(LocalDateTime checkOutTime) {
+        this.checkOutTime = checkOutTime;
+    }
+
 }

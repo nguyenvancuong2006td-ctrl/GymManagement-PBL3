@@ -24,6 +24,9 @@ public class MembershipPackageBUS {
         if (p.getDuration() <= 0)
             throw new IllegalArgumentException("Thời hạn phải > 0!");
 
+        if (p.getDurationType() == null || p.getDurationType().isBlank())
+            throw new IllegalArgumentException("Vui lòng chọn loại thời hạn (DAY/MONTH)!");
+
         if (p.getPrice() < 0)
             throw new IllegalArgumentException("Giá không được âm!");
 
@@ -43,6 +46,9 @@ public class MembershipPackageBUS {
 
         if (p.getDuration() <= 0)
             throw new IllegalArgumentException("Thời hạn phải > 0!");
+
+        if (p.getDurationType() == null || p.getDurationType().isBlank())
+            throw new IllegalArgumentException("Vui lòng chọn loại thời hạn (DAY/MONTH)!");
 
         if (p.getPrice() < 0)
             throw new IllegalArgumentException("Giá không được âm!");

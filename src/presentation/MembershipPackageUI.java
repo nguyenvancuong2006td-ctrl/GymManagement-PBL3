@@ -39,6 +39,8 @@ public class MembershipPackageUI extends JPanel {
     private final MembershipPackageBUS bus = new MembershipPackageBUS();
     private List<MembershipPackage> allPackages = new ArrayList<>();
 
+    private JComboBox<String> cbType;
+
     /* ===== PRICE FORMATTER ===== */
     private final NumberFormat priceFormat =
             NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
@@ -88,13 +90,18 @@ public class MembershipPackageUI extends JPanel {
         txtName = new JTextField();
         txtDuration = new JTextField();
         txtPrice = new JTextField();
+        cbType = new JComboBox<>(new String[]{"DAY", "MONTH"});
 
+        // ===== ROW 1 =====
         g.gridy = 0;
         addFormField(card, g, 0, "Package Name", txtName);
-        addFormField(card, g, 2, "Duration (Months)", txtDuration);
+        addFormField(card, g, 2, "Duration", txtDuration);
 
+        // ===== ROW 2 =====
         g.gridy = 1;
-        addFormField(card, g, 0, "Price (₫)", txtPrice);
+        addFormField(card, g, 0, "Type", cbType);
+        addFormField(card, g, 2, "Price (₫)", txtPrice);
+
 
         btnAdd = new RoundedButton("Add", new Color(46, 204, 113));
         btnUpdate = new RoundedButton("Update", new Color(52, 152, 219));
@@ -123,8 +130,9 @@ public class MembershipPackageUI extends JPanel {
         return wrapper;
     }
 
+
     private void addFormField(JPanel panel, GridBagConstraints g,
-                              int x, String label, JTextField field) {
+                              int x, String label, JComponent field) {
         g.gridx = x;
         g.weightx = 0;
         panel.add(new JLabel(label + ":"), g);
@@ -184,12 +192,18 @@ public class MembershipPackageUI extends JPanel {
 
         for (MembershipPackage p : allPackages) {
             if (p.getPackageName().toLowerCase().contains(keyword.toLowerCase())) {
+
+                String durationText =
+                        "DAY".equalsIgnoreCase(p.getDurationType())
+                                ? p.getDuration() + " ngày"
+                                : p.getDuration() + " tháng";
                 model.addRow(new Object[]{
                         p.getPackageID(),
                         p.getPackageName(),
-                        p.getDuration(),
+                        durationText,
                         p.getPrice()
                 });
+
             }
         }
 
@@ -231,6 +245,7 @@ public class MembershipPackageUI extends JPanel {
         MembershipPackage p = new MembershipPackage();
         p.setPackageName(txtName.getText());
         p.setDuration(Integer.parseInt(txtDuration.getText()));
+        p.setDurationType(cbType.getSelectedItem().toString());
 
         double price = Double.parseDouble(
                 txtPrice.getText().replaceAll("[^0-9]", "")
@@ -269,6 +284,7 @@ public class MembershipPackageUI extends JPanel {
         txtID.setText(table.getValueAt(r, 0).toString());
         txtName.setText(table.getValueAt(r, 1).toString());
         txtDuration.setText(table.getValueAt(r, 2).toString());
+        cbType.setSelectedItem("MONTH"); // hoặc bạn có thể nâng cấp lấy từ DB
 
         double price = Double.parseDouble(
                 table.getValueAt(r, 3).toString().replaceAll("[^0-9]", "")

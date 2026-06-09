@@ -51,11 +51,17 @@ public class CheckInPanel extends JPanel {
         btnCheckIn.setBackground(new Color(33, 150, 243));
         btnCheckIn.setForeground(Color.WHITE);
         btnCheckIn.setFocusPainted(false);
-        btnCheckIn.setPreferredSize(new Dimension(130, 36));
+
+        JButton btnCheckOut = new JButton("CHECK-OUT");
+        btnCheckOut.setBackground(new Color(231, 76, 60));
+        btnCheckOut.setForeground(Color.WHITE);
+        btnCheckOut.setFocusPainted(false);
+        btnCheckOut.setPreferredSize(new Dimension(130, 36));
 
         checkInBox.add(lblInput);
         checkInBox.add(txtPhone);
         checkInBox.add(btnCheckIn);
+        checkInBox.add(btnCheckOut);
 
         content.add(checkInBox);
         content.add(Box.createVerticalStrut(24));
@@ -137,7 +143,36 @@ public class CheckInPanel extends JPanel {
 
         /* ================= EVENT ================= */
         btnCheckIn.addActionListener(e -> handleCheckIn());
+        btnCheckOut.addActionListener(e -> handleCheckOut());
         txtPhone.addActionListener(e -> handleCheckIn());
+    }
+
+    private void handleCheckOut() {
+        try {
+            String phone = txtPhone.getText().trim();
+
+            if (!phone.matches("\\d{9,11}")) {
+                throw new Exception("Số điện thoại không hợp lệ");
+            }
+
+            checkInBUS.checkOut(phone);
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Check-out thành công!"
+            );
+
+            txtPhone.setText("");
+            txtPhone.requestFocus();
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    ex.getMessage(),
+                    "Check-out thất bại",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
     }
 
     /* ================= UI HELPERS ================= */

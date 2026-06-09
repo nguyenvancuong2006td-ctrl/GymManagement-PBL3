@@ -120,4 +120,38 @@ public class CheckInDAO {
 
         return list;
     }
+
+    /* ================= CHECK-OUT ================= */
+
+    public void checkOut(String phoneNumber) throws SQLException {
+
+        String sql = """
+        UPDATE CheckIn
+        SET checkOutTime = GETDATE()
+        WHERE phoneNumber = ?
+        AND checkOutTime IS NULL
+    """;
+
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, phoneNumber);
+            ps.executeUpdate();
+        }
+    }
+
+    public boolean isChecking(String phoneNumber) throws SQLException {
+
+        String sql = """
+        SELECT COUNT(*) FROM CheckIn
+        WHERE phoneNumber = ?
+        AND checkOutTime IS NULL
+    """;
+
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, phoneNumber);
+            ResultSet rs = ps.executeQuery();
+            rs.next();
+            return rs.getInt(1) > 0;
+        }
+    }
+
 }

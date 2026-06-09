@@ -43,9 +43,8 @@ public class CheckInBUS {
             );
         }
 
-        // Không cho check-in trùng ngày
-        if (checkInDAO.hasCheckedInToday(phoneNumber)) {
-            throw new Exception("Hội viên đã check-in hôm nay");
+        if (checkInDAO.isChecking(phoneNumber)) {
+            throw new Exception("Hội viên chưa check-out");
         }
 
         // Ghi nhận check-in
@@ -56,6 +55,20 @@ public class CheckInBUS {
         checkInDAO.insert(checkIn);
 
         return member;
+    }
+
+    public void checkOut(String phoneNumber) throws Exception {
+
+        Member member = memberDAO.getByPhone(phoneNumber);
+        if (member == null) {
+            throw new Exception("Hội viên không tồn tại");
+        }
+
+        if (!checkInDAO.isChecking(phoneNumber)) {
+            throw new Exception("Hội viên chưa check-in");
+        }
+
+        checkInDAO.checkOut(phoneNumber);
     }
 
     /* ================= DỮ LIỆU TAB CHECK-IN ================= */

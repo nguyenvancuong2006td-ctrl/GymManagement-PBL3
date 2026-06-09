@@ -1,6 +1,7 @@
 package presentation;
 
 import business.MemberBUS;
+import business.MemberPackageBUS;
 import business.ServiceCheckoutBUS;
 import data.MemberPackageDAO;
 import util.InvoicePDFExporter;
@@ -378,6 +379,14 @@ public class MemberUI extends JPanel {
                     PaymentMethod.CASH
             );
 
+
+            new MemberPackageBUS().registerPackage(
+                    memberID,
+                    packageID,
+                    java.time.LocalDate.now()
+            );
+
+
             JOptionPane.showMessageDialog(
                     this,
                     "Thanh toán thành công!\nMã hóa đơn: #" + invoiceID
@@ -431,12 +440,6 @@ public class MemberUI extends JPanel {
         return f;
     }
 
-    private JButton btn(String t, Color c) {
-        JButton b = new JButton(t);
-        b.setBackground(c);
-        b.setForeground(Color.WHITE);
-        return b;
-    }
 
     private void addRow(JPanel p, GridBagConstraints g, int y,
                         String l1, JComponent f1,

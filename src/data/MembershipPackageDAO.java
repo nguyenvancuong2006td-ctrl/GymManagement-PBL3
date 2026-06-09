@@ -15,6 +15,7 @@ public class MembershipPackageDAO {
         p.setPackageName(rs.getString("packageName"));
         p.setDuration(rs.getInt("duration"));
         p.setPrice(rs.getDouble("price"));
+        p.setDurationType(rs.getString("durationType"));
         return p;
     }
 
@@ -48,8 +49,9 @@ public class MembershipPackageDAO {
 
     public boolean insert(MembershipPackage p) {
         String sql = """
-            INSERT INTO MembershipPackage (packageName, duration, price)
-            VALUES (?, ?, ?)
+           INSERT INTO MembershipPackage (packageName, duration, durationType, price)
+           VALUES (?, ?, ?, ?)
+           
         """;
 
         try (Connection c = DBConnection.getConnection();
@@ -57,7 +59,8 @@ public class MembershipPackageDAO {
 
             ps.setString(1, p.getPackageName());
             ps.setInt(2, p.getDuration());
-            ps.setDouble(3, p.getPrice());
+            ps.setString(3, p.getDurationType());
+            ps.setDouble(4, p.getPrice());
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
@@ -67,18 +70,21 @@ public class MembershipPackageDAO {
 
     public boolean update(MembershipPackage p) {
         String sql = """
-            UPDATE MembershipPackage
-            SET packageName=?, duration=?, price=?
-            WHERE packageID=?
-        """;
+              UPDATE MembershipPackage
+              SET packageName=?, duration=?, durationType=?, price=?
+              WHERE packageID=?
+              """;
 
         try (Connection c = DBConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
 
+
             ps.setString(1, p.getPackageName());
             ps.setInt(2, p.getDuration());
-            ps.setDouble(3, p.getPrice());
-            ps.setInt(4, p.getPackageID());
+            ps.setString(3, p.getDurationType());
+            ps.setDouble(4, p.getPrice());
+            ps.setInt(5, p.getPackageID());
+
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {

@@ -562,7 +562,7 @@ public class MemberDetailDialog extends JDialog {
         JPanel tableCard = cardBorder("LỊCH SỬ CHECK-IN");
 
         DefaultTableModel model = new DefaultTableModel(
-                new String[]{"Ngày", "Giờ check-in"}, 0
+                new String[]{"Ngày", "Check-in", "Check-out", "Thời gian"}, 0
         ) {
             public boolean isCellEditable(int r, int c) {
                 return false;
@@ -570,9 +570,28 @@ public class MemberDetailDialog extends JDialog {
         };
 
         for (CheckIn ci : history) {
+
+            LocalDateTime in = ci.getCheckInTime();
+            LocalDateTime out = ci.getCheckOutTime();
+
+            //  CHECK-OUT TEXT
+            String outText = (out == null)
+                    ? "Đang tập"
+                    : out.format(timeFmt);
+
+            //  THỜI GIAN TẬP
+            String durationText = "-";
+
+            if (out != null) {
+                long minutes = java.time.Duration.between(in, out).toMinutes();
+                durationText = minutes + " phút";
+            }
+
             model.addRow(new Object[]{
-                    ci.getCheckInTime().format(dateFmt),
-                    ci.getCheckInTime().format(timeFmt)
+                    in.format(dateFmt),
+                    in.format(timeFmt),
+                    outText,
+                    durationText
             });
         }
 
@@ -584,11 +603,14 @@ public class MemberDetailDialog extends JDialog {
 
         DefaultTableCellRenderer center = new DefaultTableCellRenderer();
         center.setHorizontalAlignment(SwingConstants.CENTER);
-        table.getColumnModel().getColumn(0).setCellRenderer(center);
-        table.getColumnModel().getColumn(1).setCellRenderer(center);
+        for (int i = 0; i < 4; i++) {
+            table.getColumnModel().getColumn(i).setCellRenderer(center);
+        }
 
-        table.getColumnModel().getColumn(0).setPreferredWidth(200);
-        table.getColumnModel().getColumn(1).setPreferredWidth(120);
+        table.getColumnModel().getColumn(0).setPreferredWidth(150);
+        table.getColumnModel().getColumn(1).setPreferredWidth(100);
+        table.getColumnModel().getColumn(2).setPreferredWidth(120);
+        table.getColumnModel().getColumn(3).setPreferredWidth(100);
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(null);
