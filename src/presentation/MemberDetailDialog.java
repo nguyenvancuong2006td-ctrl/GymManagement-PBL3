@@ -584,7 +584,15 @@ public class MemberDetailDialog extends JDialog {
 
             if (out != null) {
                 long minutes = java.time.Duration.between(in, out).toMinutes();
-                durationText = minutes + " phút";
+
+                long hours = minutes / 60;
+                long remainMinutes = minutes % 60;
+
+                if (hours > 0) {
+                    durationText = hours + " giờ " + remainMinutes + " phút";
+                } else {
+                    durationText = remainMinutes + " phút";
+                }
             }
 
             model.addRow(new Object[]{

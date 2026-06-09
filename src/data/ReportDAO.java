@@ -64,12 +64,12 @@ public class ReportDAO {
     public List<CheckIn> getCheckInDetail(LocalDate date) {
 
         List<CheckIn> list = new ArrayList<>();
-
         String sql =
-                "SELECT phoneNumber, checkInTime " +
-                        "FROM CheckIn " +
-                        "WHERE CAST(checkInTime AS DATE) = ? " +
-                        "ORDER BY checkInTime";
+                "SELECT m.fullName, c.phoneNumber, c.checkInTime, c.checkOutTime " +
+                        "FROM CheckIn c " +
+                        "JOIN Member m ON c.phoneNumber = m.phoneNumber " +
+                        "WHERE CAST(c.checkInTime AS DATE) = ? " +
+                        "ORDER BY c.checkInTime";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -80,7 +80,14 @@ public class ReportDAO {
             while (rs.next()) {
                 CheckIn c = new CheckIn();
                 c.setPhoneNumber(rs.getString("phoneNumber"));
+                c.setFullName(rs.getString("fullName"));
                 c.setCheckInTime(rs.getTimestamp("checkInTime").toLocalDateTime());
+
+                Timestamp out = rs.getTimestamp("checkOutTime");
+                if (out != null) {
+                    c.setCheckOutTime(out.toLocalDateTime());
+                }
+
                 list.add(c);
             }
 
@@ -166,7 +173,7 @@ public class ReportDAO {
                         rs.getTimestamp("invoiceDate").toLocalDateTime()
                 );
                 i.setTotalAmount(rs.getBigDecimal("totalAmount"));
-                i.setStaffName(rs.getString("fullName")); // ✅ TỪ Staff
+                i.setStaffName(rs.getString("fullName"));
 
                 list.add(i);
             }

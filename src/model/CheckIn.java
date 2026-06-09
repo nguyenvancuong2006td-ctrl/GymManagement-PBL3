@@ -8,6 +8,7 @@ public class CheckIn {
     private String phoneNumber;
     private LocalDateTime checkInTime;
     private LocalDateTime checkOutTime;
+    private String fullName;
 
     // ===== CONSTRUCTOR =====
     public CheckIn() {}
@@ -48,6 +49,14 @@ public class CheckIn {
 
     public void setCheckOutTime(LocalDateTime checkOutTime) {
         this.checkOutTime = checkOutTime;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
 }

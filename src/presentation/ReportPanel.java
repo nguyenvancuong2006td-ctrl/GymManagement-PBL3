@@ -11,6 +11,10 @@ import com.github.lgooddatepicker.components.DatePicker;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.DefaultTableCellRenderer;
 
+import java.text.NumberFormat;
+import java.util.Locale;
+
+
 public class ReportPanel extends JPanel {
 
     private final ReportBUS reportBUS = new ReportBUS();
@@ -76,7 +80,7 @@ public class ReportPanel extends JPanel {
 
         btnView.addActionListener(e -> loadData());
         btnPdf.addActionListener(e -> exportPdf());
-        addDoubleClick();
+//        addDoubleClick();
     }
 
     private void loadData() {
@@ -92,22 +96,90 @@ public class ReportPanel extends JPanel {
         if (cbType.getSelectedIndex() == 0) {
 
             model.setColumnIdentifiers(
-                    new String[]{"Ngày", "Số lượt check-in"}
+                    new String[]{
+                            "Ngày",
+                            "Họ tên",
+                            "SĐT",
+                            "Check-in",
+                            "Check-out",
+                            "Thời gian",
+                            "Trạng thái"
+                    }
             );
+            java.time.format.DateTimeFormatter timeFmt =
+                    java.time.format.DateTimeFormatter.ofPattern("HH:mm");
 
-            for (Object[] r : reportBUS.getCheckInReport(from, to)) {
-                model.addRow(r);
+            java.time.format.DateTimeFormatter dateFmt =
+                    java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+            for (LocalDate d = from; !d.isAfter(to); d = d.plusDays(1)) {
+
+                java.util.List<model.CheckIn> list =
+                        reportBUS.getCheckInDetail(d);
+
+                for (model.CheckIn ci : list) {
+
+                    java.time.LocalDateTime in = ci.getCheckInTime();
+                    java.time.LocalDateTime out = ci.getCheckOutTime();
+
+                    // trạng thái
+                    String status = (out == null)
+                            ? "Đang tập"
+                            : "Hoàn thành";
+
+                    // thời gian tập
+                    String duration = "-";
+
+                    if (out != null) {
+                        long minutes =
+                                java.time.Duration.between(in, out).toMinutes();
+
+                        long hours = minutes / 60;
+                        long remain = minutes % 60;
+
+                        if (hours > 0) {
+                            duration = hours + "h " + remain + "p";
+                        } else {
+                            duration = remain + "p";
+                        }
+                    }
+
+                    model.addRow(new Object[]{
+                            in.toLocalDate().format(dateFmt),
+                            ci.getFullName(),
+                            ci.getPhoneNumber(),
+                            in.format(timeFmt),
+                            (out == null ? "-" : out.format(timeFmt)),
+                            duration,
+                            status
+                    });
+                }
             }
-
         } else if (cbType.getSelectedIndex() == 1) {
 
             model.setColumnIdentifiers(
                     new String[]{"Ngày", "Số hóa đơn", "Doanh thu"}
             );
 
+
+            java.text.NumberFormat moneyFmt =
+                    java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("vi", "VN"));
+
+
+
             for (Object[] r : reportBUS.getRevenueReport(from, to)) {
-                model.addRow(r);
+
+                LocalDate date = (LocalDate) r[0];
+                int count = (int) r[1];
+                java.math.BigDecimal money = (java.math.BigDecimal) r[2];
+
+                model.addRow(new Object[]{
+                        date,
+                        count,
+                        moneyFmt.format(money)
+                });
             }
+
 
         } else {
             Frame owner =
@@ -166,30 +238,34 @@ public class ReportPanel extends JPanel {
 
 
 
-    private void addDoubleClick() {
-
-        table.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent e) {
-
-                if (e.getClickCount() == 2 && table.getSelectedRow() != -1) {
-
-                    LocalDate d =
-                            (LocalDate) model.getValueAt(
-                                    table.getSelectedRow(), 0
-                            );
-
-                    Frame owner =
-                            (Frame) SwingUtilities.getWindowAncestor(table);
-
-                    if (cbType.getSelectedIndex() == 0)
-                        new CheckInReportDialog(owner, d).setVisible(true);
-                    else
-                        new RevenueReportDialog(owner, d).setVisible(true);
-                }
-            }
-        });
-    }
+//    private void addDoubleClick() {
+//
+//        table.addMouseListener(new java.awt.event.MouseAdapter() {
+//            @Override
+//            public void mouseClicked(java.awt.event.MouseEvent e) {
+//
+//                if (e.getClickCount() == 2 && table.getSelectedRow() != -1) {
+//
+//                    String dateStr = model.getValueAt(
+//                            table.getSelectedRow(), 0
+//                    ).toString();
+//
+//                    java.time.format.DateTimeFormatter fmt =
+//                            java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+//
+//                    LocalDate d = LocalDate.parse(dateStr, fmt);
+//
+//                    Frame owner =
+//                            (Frame) SwingUtilities.getWindowAncestor(table);
+//
+//                    if (cbType.getSelectedIndex() == 0)
+//                        new CheckInReportDialog(owner, d).setVisible(true);
+//                    else
+//                        new RevenueReportDialog(owner, d).setVisible(true);
+//                }
+//            }
+//        });
+//    }
 
 
     private DatePicker createDatePicker() {
@@ -248,14 +324,8 @@ public class ReportPanel extends JPanel {
                             int row,
                             int column) {
 
-                        Component c =
-                                super.getTableCellRendererComponent(
-                                        table,
-                                        value,
-                                        isSelected,
-                                        hasFocus,
-                                        row,
-                                        column);
+                        Component c = super.getTableCellRendererComponent(
+                                table, value, isSelected, hasFocus, row, column);
 
                         if (!isSelected) {
                             c.setBackground(
@@ -264,10 +334,17 @@ public class ReportPanel extends JPanel {
                                             : new Color(245, 245, 245)
                             );
                         }
+                        setHorizontalAlignment(SwingConstants.CENTER);
 
-                        setHorizontalAlignment(
-                                SwingConstants.CENTER
-                        );
+                        if (column == 6 && value != null) { // cột trạng thái
+                            if (value.toString().equals("Đang tập")) {
+                                c.setForeground(new Color(46, 204, 113)); // xanh
+                            } else {
+                                c.setForeground(Color.GRAY);
+                            }
+                        } else {
+                            c.setForeground(Color.BLACK); // reset về mặc định
+                        }
 
                         return c;
                     }

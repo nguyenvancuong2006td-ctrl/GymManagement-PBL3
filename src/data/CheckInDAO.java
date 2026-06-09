@@ -95,7 +95,7 @@ public class CheckInDAO {
         List<CheckIn> list = new ArrayList<>();
 
         String sql =
-                "SELECT checkInID, phoneNumber, checkInTime " +
+                "SELECT checkInID, phoneNumber, checkInTime, checkOutTime " +
                         "FROM CheckIn " +
                         "WHERE phoneNumber = ? " +
                         "ORDER BY checkInTime DESC";
@@ -111,6 +111,12 @@ public class CheckInDAO {
                 ci.setCheckInTime(
                         rs.getTimestamp("checkInTime").toLocalDateTime()
                 );
+
+                Timestamp outTs = rs.getTimestamp("checkOutTime");
+                if (outTs != null) {
+                    ci.setCheckOutTime(outTs.toLocalDateTime());
+                }
+
                 list.add(ci);
             }
 
