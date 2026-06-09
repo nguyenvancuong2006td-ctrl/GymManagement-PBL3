@@ -203,4 +203,110 @@ public class WorkoutScheduleDAO {
         }
     }
 
+    // Đếm số buổi PT đã dùng (DONE)
+    public int countDoneSessions(int memberPTID) {
+
+        String sql = """
+        SELECT COUNT(*) 
+        FROM WorkoutSchedule
+        WHERE memberPTID = ?
+          AND status = 'DONE'
+    """;
+
+        try (Connection c = DBConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+            ps.setInt(1, memberPTID);
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("Count DONE sessions failed", e);
+        }
+
+        return 0;
+    }
+
+    // ✅ Update DONE khi checkout
+    public void markDoneIfValid(int memberPTID,
+                                LocalTime checkIn,
+                                LocalTime checkOut) {
+        if (checkOut.isBefore(checkIn)) return;
+
+        String sql = """
+        SELECT * 
+        FROM WorkoutSchedule
+        WHERE memberPTID = ?
+          AND status = 'BOOKED'
+          AND date = ?
+    """;
+
+        try (Connection c = DBConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+
+            ps.setInt(1, memberPTID);
+            ps.setDate(2, java.sql.Date.valueOf(LocalDate.now()));
+
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+
+                int id = rs.getInt("scheduleID");
+
+                LocalTime start = rs.getTime("startTime").toLocalTime();
+                LocalTime end = rs.getTime("endTime").toLocalTime();
+
+                // ✅ overlap
+                boolean isOverlap =
+                        !checkIn.isAfter(end) &&
+                                !checkOut.isBefore(start);
+
+                // ✅ duration
+                long minutes =
+                        java.time.Duration.between(checkIn, checkOut).toMinutes();
+
+                boolean enoughTime = minutes >= 30; // rule
+
+                if (isOverlap && enoughTime) {
+
+                    System.out.println("✅ DONE: scheduleID = " + id);
+
+                    String updateSql = """
+                      UPDATE WorkoutSchedule
+                      SET status = 'DONE'
+                      WHERE scheduleID = ?
+                      """;
+
+                    try (PreparedStatement ps2 = c.prepareStatement(updateSql)) {
+                        ps2.setInt(1, id);
+                        ps2.executeUpdate();
+                    }
+
+                    break;
+
+                } else {
+
+                    System.out.println(" Không đủ điều kiện DONE");
+
+                    System.out.println(
+                            "CheckIn: " + checkIn +
+                                    " | CheckOut: " + checkOut +
+                                    " | Start: " + start +
+                                    " | End: " + end +
+                                    " | Minutes: " + minutes
+                    );
+                }
+
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Update DONE failed", e);
+        }
+    }
 }

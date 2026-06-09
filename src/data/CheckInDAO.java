@@ -1,6 +1,7 @@
 package data;
 
 import model.CheckIn;
+import model.MemberPT;
 import util.DBConnection;
 
 import java.sql.*;
@@ -131,16 +132,57 @@ public class CheckInDAO {
 
     public void checkOut(String phoneNumber) throws SQLException {
 
-        String sql = """
+        // 1. lấy check-in chưa checkout
+        String getSql = """
+        SELECT TOP 1 *
+        FROM CheckIn
+        WHERE phoneNumber = ?
+        AND checkOutTime IS NULL
+        ORDER BY checkInTime DESC
+    """;
+
+        LocalDateTime checkInTime = null;
+
+        try (PreparedStatement ps = con.prepareStatement(getSql)) {
+            ps.setString(1, phoneNumber);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                checkInTime = rs.getTimestamp("checkInTime").toLocalDateTime();
+            }
+        }
+
+        if (checkInTime == null) return;
+
+        // 2. update checkout
+        String updateSql = """
         UPDATE CheckIn
         SET checkOutTime = GETDATE()
         WHERE phoneNumber = ?
         AND checkOutTime IS NULL
     """;
 
-        try (PreparedStatement ps = con.prepareStatement(sql)) {
+        LocalDateTime checkOutTime = LocalDateTime.now();
+
+        try (PreparedStatement ps = con.prepareStatement(updateSql)) {
             ps.setString(1, phoneNumber);
             ps.executeUpdate();
+        }
+
+        // 3. update PT DONE
+        MemberDAO memberDAO = new MemberDAO();
+        MemberPTDAO memberPTDAO = new MemberPTDAO();
+        WorkoutScheduleDAO scheduleDAO = new WorkoutScheduleDAO();
+
+        int memberID = memberDAO.getByPhone(phoneNumber).getMemberID();
+        MemberPT pt = memberPTDAO.getByMember(memberID);
+
+        if (pt != null) {
+            scheduleDAO.markDoneIfValid(
+                    pt.getMemberPTID(),
+                    checkInTime.toLocalTime(),
+                    checkOutTime.toLocalTime()
+            );
         }
     }
 

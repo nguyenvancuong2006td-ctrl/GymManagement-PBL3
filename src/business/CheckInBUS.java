@@ -1,10 +1,9 @@
 package business;
 
-import data.CheckInDAO;
-import data.MemberDAO;
-import data.MemberPackageDAO;
+import data.*;
 import model.CheckIn;
 import model.Member;
+import model.MemberPT;
 import model.MemberPackage;
 
 import java.time.LocalDateTime;
@@ -15,6 +14,9 @@ public class CheckInBUS {
     private final MemberDAO memberDAO = new MemberDAO();
     private final CheckInDAO checkInDAO = new CheckInDAO();
     private final MemberPackageDAO packageDAO = new MemberPackageDAO();
+    private final MemberPTDAO memberPTDAO = new MemberPTDAO();
+    private final WorkoutScheduleDAO scheduleDAO = new WorkoutScheduleDAO();
+
 
     /* ================= CHECK-IN NGHIỆP VỤ ================= */
 
@@ -59,6 +61,7 @@ public class CheckInBUS {
 
     public void checkOut(String phoneNumber) throws Exception {
 
+        // 1. check member
         Member member = memberDAO.getByPhone(phoneNumber);
         if (member == null) {
             throw new Exception("Hội viên không tồn tại");
@@ -68,7 +71,24 @@ public class CheckInBUS {
             throw new Exception("Hội viên chưa check-in");
         }
 
+        // 2. Lấy check-in gần nhất (trước khi update)
+        LocalDateTime checkInTime = checkInDAO.getLatestByPhone(phoneNumber);
+        LocalDateTime checkOutTime = LocalDateTime.now();
+
+        // 3. update checkout
         checkInDAO.checkOut(phoneNumber);
+
+        // 4. lấy memberPT
+        MemberPT pt = memberPTDAO.getByMember(member.getMemberID());
+
+        if (pt != null) {
+            // 5. gọi logic DONE
+            scheduleDAO.markDoneIfValid(
+                    pt.getMemberPTID(),
+                    checkInTime.toLocalTime(),
+                    checkOutTime.toLocalTime()
+            );
+        }
     }
 
     /* ================= DỮ LIỆU TAB CHECK-IN ================= */

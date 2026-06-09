@@ -294,8 +294,17 @@ public class MemberDetailDialog extends JDialog {
 
         summary.add(summaryCard("Dịch vụ PT", s.getServiceName()));
         summary.add(summaryCard("PT", "ID: " + s.getTrainerID()));
-        summary.add(summaryCard("Tổng buổi", String.valueOf(s.getTotalSessions())));
-        summary.add(summaryCard("Đã dùng", String.valueOf(pt.getUsedSessions())));
+        WorkoutScheduleDAO scheduleDAO = new WorkoutScheduleDAO();
+
+        int total = s.getTotalSessions();
+        int used = scheduleDAO.countDoneSessions(pt.getMemberPTID());
+
+        summary.add(summaryCard("Buổi PT", used + " / " + total));
+
+        String ptStatus = (used > 0) ? "Đã tập" : "Chưa tập";
+
+        summary.add(summaryCard("Trạng thái PT", ptStatus));
+
 
         root.add(summary, BorderLayout.NORTH);
 
@@ -309,7 +318,6 @@ public class MemberDetailDialog extends JDialog {
             public boolean isCellEditable(int r, int c) { return false; }
         };
 
-        WorkoutScheduleDAO scheduleDAO = new WorkoutScheduleDAO();
         for (Object[] row : scheduleDAO.getByMemberPT(pt.getMemberPTID())) {
             model.addRow(row);
         }
@@ -328,11 +336,18 @@ public class MemberDetailDialog extends JDialog {
                 Component c = super.getTableCellRendererComponent(
                         table, value, isSelected, hasFocus, row, column);
 
-                if (!isSelected) {
+                String status = table.getValueAt(row, 4).toString();
+
+                if ("DONE".equals(status)) {
+                    c.setBackground(new Color(200, 255, 200));
+                } else if ("CANCELLED".equals(status)) {
+                    c.setBackground(new Color(255, 200, 200));
+                } else if (!isSelected) {
                     c.setBackground(row % 2 == 0
                             ? Color.WHITE
                             : new Color(248, 248, 248));
                 }
+
                 return c;
             }
         });
