@@ -312,6 +312,7 @@ public class ProductManagementUI extends JPanel {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
             JFileChooser fc = new JFileChooser();
+            fc.setCurrentDirectory(new java.io.File("images"));
 
             int result = fc.showOpenDialog(this);
 
