@@ -11,9 +11,6 @@ import com.github.lgooddatepicker.components.DatePicker;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.DefaultTableCellRenderer;
 
-import java.text.NumberFormat;
-import java.util.Locale;
-
 
 public class ReportPanel extends JPanel {
 
@@ -23,6 +20,7 @@ public class ReportPanel extends JPanel {
     private final JComboBox<String> cbType;
     private final DatePicker dpFrom;
     private final DatePicker dpTo;
+    private JLabel lblTotalRevenue;
 
     public ReportPanel() {
 
@@ -57,6 +55,12 @@ public class ReportPanel extends JPanel {
         filter.add(btnView);
 
         add(filter, BorderLayout.NORTH);
+        lblTotalRevenue = new JLabel("Tổng doanh thu: 0 ₫");
+        lblTotalRevenue.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblTotalRevenue.setForeground(new Color(231, 76, 60));
+
+        add(lblTotalRevenue, BorderLayout.SOUTH);
+
 
         /* ================= TABLE ================= */
 
@@ -80,7 +84,6 @@ public class ReportPanel extends JPanel {
 
         btnView.addActionListener(e -> loadData());
         btnPdf.addActionListener(e -> exportPdf());
-//        addDoubleClick();
     }
 
     private void loadData() {
@@ -158,7 +161,7 @@ public class ReportPanel extends JPanel {
         } else if (cbType.getSelectedIndex() == 1) {
 
             model.setColumnIdentifiers(
-                    new String[]{"Ngày", "Số hóa đơn", "Doanh thu"}
+                    new String[]{"Ngày", "Số hóa đơn", "Doanh thu", "TB / HĐ"}
             );
 
 
@@ -167,19 +170,35 @@ public class ReportPanel extends JPanel {
 
 
 
+            java.math.BigDecimal total = java.math.BigDecimal.ZERO;
+
             for (Object[] r : reportBUS.getRevenueReport(from, to)) {
 
                 LocalDate date = (LocalDate) r[0];
                 int count = (int) r[1];
                 java.math.BigDecimal money = (java.math.BigDecimal) r[2];
 
+                total = total.add(money);
+
+                java.math.BigDecimal avg =
+                        (count == 0)
+                                ? java.math.BigDecimal.ZERO
+                                : money.divide(
+                                java.math.BigDecimal.valueOf(count),
+                                java.math.RoundingMode.HALF_UP
+                        );
+
                 model.addRow(new Object[]{
                         date,
                         count,
-                        moneyFmt.format(money)
+                        moneyFmt.format(money),
+                        moneyFmt.format(avg)
                 });
             }
 
+            lblTotalRevenue.setText(
+                    "Tổng doanh thu: " + moneyFmt.format(total)
+            );
 
         } else {
             Frame owner =
@@ -236,38 +255,6 @@ public class ReportPanel extends JPanel {
         );
     }
 
-
-
-//    private void addDoubleClick() {
-//
-//        table.addMouseListener(new java.awt.event.MouseAdapter() {
-//            @Override
-//            public void mouseClicked(java.awt.event.MouseEvent e) {
-//
-//                if (e.getClickCount() == 2 && table.getSelectedRow() != -1) {
-//
-//                    String dateStr = model.getValueAt(
-//                            table.getSelectedRow(), 0
-//                    ).toString();
-//
-//                    java.time.format.DateTimeFormatter fmt =
-//                            java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
-//
-//                    LocalDate d = LocalDate.parse(dateStr, fmt);
-//
-//                    Frame owner =
-//                            (Frame) SwingUtilities.getWindowAncestor(table);
-//
-//                    if (cbType.getSelectedIndex() == 0)
-//                        new CheckInReportDialog(owner, d).setVisible(true);
-//                    else
-//                        new RevenueReportDialog(owner, d).setVisible(true);
-//                }
-//            }
-//        });
-//    }
-
-
     private DatePicker createDatePicker() {
 
         DatePicker picker = new DatePicker();
@@ -312,6 +299,19 @@ public class ReportPanel extends JPanel {
         DefaultTableCellRenderer center = new DefaultTableCellRenderer();
         center.setHorizontalAlignment(SwingConstants.CENTER);
 
+        DefaultTableCellRenderer right = new DefaultTableCellRenderer();
+        right.setHorizontalAlignment(SwingConstants.RIGHT);
+
+
+        if (table.getColumnCount() > 2) {
+            table.getColumnModel().getColumn(2).setCellRenderer(right);
+        }
+
+
+        if (table.getColumnCount() > 3) {
+            table.getColumnModel().getColumn(3).setCellRenderer(right);
+        }
+
         table.setDefaultRenderer(Object.class,
                 new DefaultTableCellRenderer() {
 
@@ -336,14 +336,14 @@ public class ReportPanel extends JPanel {
                         }
                         setHorizontalAlignment(SwingConstants.CENTER);
 
-                        if (column == 6 && value != null) { // cột trạng thái
+                        if (column == 6 && value != null) {
                             if (value.toString().equals("Đang tập")) {
-                                c.setForeground(new Color(46, 204, 113)); // xanh
+                                c.setForeground(new Color(46, 204, 113));
                             } else {
                                 c.setForeground(Color.GRAY);
                             }
                         } else {
-                            c.setForeground(Color.BLACK); // reset về mặc định
+                            c.setForeground(Color.BLACK);
                         }
 
                         return c;

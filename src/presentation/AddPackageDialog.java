@@ -8,21 +8,20 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
-import java.text.DecimalFormat;
 
 public class AddPackageDialog extends JDialog {
 
     private JTextField txtName;
     private JTextField txtPrice;
-    private JLabel lblPreviewPrice;
-    private JSpinner spDuration;
+    private JTextField txtDuration;
+    private JComboBox<String> cbType;
 
     private boolean saved = false;
 
     public AddPackageDialog(Window owner) {
-        super(owner, "Thêm gói tập", ModalityType.APPLICATION_MODAL);
+        super(owner, "Membership Package", ModalityType.APPLICATION_MODAL);
 
-        setSize(460, 350);
+        setSize(520, 250);
         setLocationRelativeTo(owner);
         setResizable(false);
 
@@ -32,105 +31,77 @@ public class AddPackageDialog extends JDialog {
     private void initUI() {
 
         // ===== ROOT =====
-        JPanel root = new JPanel(new GridBagLayout());
-        root.setBackground(new Color(240, 244, 249));
+        JPanel root = new JPanel(new BorderLayout());
+        root.setBackground(new Color(245, 247, 250));
+        root.setBorder(new EmptyBorder(15, 20, 15, 20));
 
         // ===== CARD =====
-        JPanel card = new JPanel(new BorderLayout());
+        JPanel card = new JPanel(new GridBagLayout());
         card.setBackground(Color.WHITE);
-        card.setPreferredSize(new Dimension(380, 280));
-        card.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(new Color(220, 230, 240), 1, true),
-                new EmptyBorder(10, 0, 0, 0)
-        ));
-
-        root.add(card);
-
-        /* ===== TITLE ===== */
-        JLabel title = new JLabel("THÊM GÓI TẬP");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        title.setBorder(new EmptyBorder(10, 15, 5, 0));
-        card.add(title, BorderLayout.NORTH);
-
-        /* ===== FORM ===== */
-        JPanel form = new JPanel(new GridBagLayout());
-        form.setBackground(Color.WHITE);
-        form.setBorder(new EmptyBorder(5, 15, 5, 15));
+        card.setBorder(new LineBorder(new Color(220, 230, 240), 1, true));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
+        gbc.insets = new Insets(10, 12, 10, 12);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1;
-        gbc.insets = new Insets(5, 0, 5, 0);
 
-        Font labelFont = new Font("Segoe UI", Font.PLAIN, 13);
-
-        // NAME
+        // ===== ROW 1 =====
+        // Label Name
+        gbc.gridx = 0;
         gbc.gridy = 0;
-        form.add(createLabel("Tên gói tập", labelFont), gbc);
+        gbc.weightx = 0;
+        card.add(new JLabel("Package Name:"), gbc);
 
-        gbc.gridy = 1;
+        // Text Name
+        gbc.gridx = 1;
+        gbc.weightx = 1;
         txtName = createTextField();
-        form.add(txtName, gbc);
+        card.add(txtName, gbc);
 
-        // DURATION
-        gbc.gridy = 2;
-        form.add(createLabel("Thời hạn (tháng)", labelFont), gbc);
+        // Label Duration
+        gbc.gridx = 2;
+        gbc.weightx = 0;
+        card.add(new JLabel("Duration:"), gbc);
 
-        gbc.gridy = 3;
-        spDuration = new JSpinner(new SpinnerNumberModel(1, 1, 60, 1));
-        spDuration.setPreferredSize(new Dimension(0, 34));
+        // Text Duration
+        gbc.gridx = 3;
+        gbc.weightx = 1;
+        txtDuration = createTextField();
+        card.add(txtDuration, gbc);
 
-        JComponent editor = spDuration.getEditor();
-        if (editor instanceof JSpinner.DefaultEditor) {
-            JTextField tf = ((JSpinner.DefaultEditor) editor).getTextField();
-            tf.setBorder(new EmptyBorder(6, 10, 6, 10));
-            tf.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        }
+        // ===== ROW 2 =====
+        // Label Type
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.weightx = 0;
+        card.add(new JLabel("Type:"), gbc);
 
-        form.add(spDuration, gbc);
+        // Combo Type
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        cbType = new JComboBox<>(new String[]{"DAY", "MONTH"});
+        cbType.setPreferredSize(new Dimension(120, 32));
+        cbType.setSelectedIndex(1); // mặc định MONTH
+        card.add(cbType, gbc);
 
-        // PRICE
-        gbc.gridy = 4;
-        form.add(createLabel("Giá (VNĐ)", labelFont), gbc);
+        // Label Price
+        gbc.gridx = 2;
+        gbc.weightx = 0;
+        card.add(new JLabel("Price (đ):"), gbc);
 
-        gbc.gridy = 5;
+        // Text Price
+        gbc.gridx = 3;
+        gbc.weightx = 1;
         txtPrice = createTextField();
-        form.add(txtPrice, gbc);
+        card.add(txtPrice, gbc);
 
-        // PREVIEW
-        gbc.gridy = 6;
-        JPanel preview = new JPanel(new BorderLayout());
-        preview.setBackground(new Color(248, 250, 253));
-        preview.setBorder(new EmptyBorder(8, 10, 8, 10));
+        root.add(card, BorderLayout.CENTER);
 
-        JLabel lblText = new JLabel("Tổng tiền:");
-        lblText.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-
-        lblPreviewPrice = new JLabel("0 VNĐ");
-        lblPreviewPrice.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        lblPreviewPrice.setForeground(new Color(39, 174, 96));
-
-        preview.add(lblText, BorderLayout.WEST);
-        preview.add(lblPreviewPrice, BorderLayout.EAST);
-
-        form.add(preview, gbc);
-
-        // update realtime
-        txtPrice.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { updatePrice(); }
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { updatePrice(); }
-            public void changedUpdate(javax.swing.event.DocumentEvent e) { updatePrice(); }
-        });
-
-        card.add(form, BorderLayout.CENTER);
-
-        /* ===== BUTTON ===== */
+        // ===== BUTTON =====
         JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
-        bottom.setBackground(Color.WHITE);
+        bottom.setBackground(new Color(245, 247, 250));
 
-        JButton btnCancel = new RoundedButton("Hủy", new Color(220, 225, 230));
-        JButton btnSave = new RoundedButton("Lưu", new Color(40, 120, 200));
+        JButton btnCancel = new RoundedButton("Hủy", new Color(180, 180, 180));
+        JButton btnSave = new RoundedButton("Lưu", new Color(52, 152, 219));
 
         btnCancel.setPreferredSize(new Dimension(90, 34));
         btnSave.setPreferredSize(new Dimension(90, 34));
@@ -143,67 +114,65 @@ public class AddPackageDialog extends JDialog {
         bottom.add(btnCancel);
         bottom.add(btnSave);
 
-        card.add(bottom, BorderLayout.SOUTH);
+        root.add(bottom, BorderLayout.SOUTH);
 
         setContentPane(root);
     }
 
-    /* ===== UI COMPONENT ===== */
+    // ===== TEXTFIELD =====
     private JTextField createTextField() {
-        JTextField txt = new JTextField();
+        JTextField txt = new JTextField(10);
 
         txt.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        txt.setPreferredSize(new Dimension(0, 34));
+        txt.setPreferredSize(new Dimension(140, 32));
 
         txt.setBorder(BorderFactory.createCompoundBorder(
                 new LineBorder(new Color(210, 220, 230), 1, true),
-                new EmptyBorder(6, 10, 6, 10)
+                new EmptyBorder(5, 10, 5, 10)
         ));
 
         return txt;
     }
 
-    private JLabel createLabel(String text, Font font) {
-        JLabel lbl = new JLabel(text);
-        lbl.setFont(font);
-        return lbl;
-    }
-
-    /* ===== LOGIC ===== */
-    private void updatePrice() {
-        try {
-            String raw = txtPrice.getText().replace(".", "").replace(",", "");
-
-            if (raw.isBlank()) {
-                lblPreviewPrice.setText("0 VNĐ");
-                return;
-            }
-
-            double price = Double.parseDouble(raw);
-            DecimalFormat df = new DecimalFormat("#,###");
-
-            lblPreviewPrice.setText(df.format(price) + " VNĐ");
-
-        } catch (Exception ignored) {}
-    }
-
+    // ===== SAVE =====
     private void savePackage() {
         try {
             MembershipPackage pkg = new MembershipPackage();
 
-            pkg.setPackageName(txtName.getText().trim());
-            pkg.setDuration((Integer) spDuration.getValue());
-            pkg.setPrice(Double.parseDouble(
-                    txtPrice.getText().replace(".", "").replace(",", "")
-            ));
+            String name = txtName.getText().trim();
+            String durationText = txtDuration.getText().trim();
+            String priceText = txtPrice.getText().trim();
+
+            // ✅ validate cơ bản
+            if (name.isEmpty() || durationText.isEmpty() || priceText.isEmpty()) {
+                throw new Exception("Vui lòng nhập đầy đủ thông tin!");
+            }
+
+            int duration = Integer.parseInt(durationText);
+            double price = Double.parseDouble(priceText.replace(",", "").replace(".", ""));
+
+            String type = cbType.getSelectedItem().toString();
+
+            pkg.setPackageName(name);
+            pkg.setDurationType(type);
+
+            if ("DAY".equals(type)) {
+                pkg.setDuration(Math.max(1, duration / 30));
+            } else {
+                pkg.setDuration(duration);
+            }
+
+            pkg.setPrice(price);
 
             new MembershipPackageBUS().add(pkg);
 
             saved = true;
 
-            JOptionPane.showMessageDialog(this, " Thêm thành công!");
+            JOptionPane.showMessageDialog(this, "Thêm thành công!");
             dispose();
 
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Sai định dạng số!", "Lỗi", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
