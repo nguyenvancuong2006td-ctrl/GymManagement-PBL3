@@ -244,7 +244,10 @@ public class MembershipPackageUI extends JPanel {
     private MembershipPackage getFormData() {
         MembershipPackage p = new MembershipPackage();
         p.setPackageName(txtName.getText());
-        p.setDuration(Integer.parseInt(txtDuration.getText()));
+
+        String raw = txtDuration.getText().replaceAll("[^0-9]", "");
+        p.setDuration(Integer.parseInt(raw));
+
         p.setDurationType(cbType.getSelectedItem().toString());
 
         double price = Double.parseDouble(
@@ -281,15 +284,17 @@ public class MembershipPackageUI extends JPanel {
         int r = table.getSelectedRow();
         if (r < 0) return;
 
-        txtID.setText(table.getValueAt(r, 0).toString());
-        txtName.setText(table.getValueAt(r, 1).toString());
-        txtDuration.setText(table.getValueAt(r, 2).toString());
-        cbType.setSelectedItem("MONTH"); // hoặc bạn có thể nâng cấp lấy từ DB
+        MembershipPackage p = allPackages.get(r);
 
-        double price = Double.parseDouble(
-                table.getValueAt(r, 3).toString().replaceAll("[^0-9]", "")
-        );
-        txtPrice.setText(String.format("%,.0f", price));
+        txtID.setText(String.valueOf(p.getPackageID()));
+        txtName.setText(p.getPackageName());
+
+        txtDuration.setText(String.valueOf(p.getDuration()));
+
+        cbType.setSelectedItem(p.getDurationType());
+
+        txtPrice.setText(String.valueOf((int)p.getPrice()));
+
     }
 
     private void clearForm() {

@@ -143,7 +143,7 @@ public class AddPackageDialog extends JDialog {
             String durationText = txtDuration.getText().trim();
             String priceText = txtPrice.getText().trim();
 
-            // ✅ validate cơ bản
+
             if (name.isEmpty() || durationText.isEmpty() || priceText.isEmpty()) {
                 throw new Exception("Vui lòng nhập đầy đủ thông tin!");
             }
