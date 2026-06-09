@@ -50,9 +50,18 @@ public class MemberUI extends JPanel {
         setBackground(new Color(240, 242, 245));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        add(createFormPanel(), BorderLayout.NORTH);
-        add(createTablePanel(), BorderLayout.CENTER);
+        JSplitPane split = new JSplitPane(
+                JSplitPane.VERTICAL_SPLIT,
+                createFormPanel(),
+                createTablePanel()
+        );
 
+        split.setResizeWeight(0.3);
+
+
+        split.setDividerLocation(220);
+
+        add(split, BorderLayout.CENTER);
         loadData();
         applyUiPermission();
         clearForm();
@@ -76,6 +85,7 @@ public class MemberUI extends JPanel {
         txtJoinDate = field(false);
 
         cbGender = new JComboBox<>(new String[]{"Male", "Female"});
+        cbGender.setPreferredSize(new Dimension(0, 34));
 
         addRow(f, g, 0, "ID", txtID, "Gender", cbGender);
         addRow(f, g, 1, "Full Name", txtName, null, null);
@@ -331,26 +341,41 @@ public class MemberUI extends JPanel {
 
             if (choicePT == JOptionPane.YES_OPTION) {
 
-                // 2.1 Chọn huấn luyện viên
-                SelectTrainerDialog trainerDialog =
-                        new SelectTrainerDialog(SwingUtilities.getWindowAncestor(this));
-                trainerDialog.setVisible(true);
+                while (true) {
 
-                if (!trainerDialog.isSelected()) return;
-                int trainerID = trainerDialog.getSelectedTrainerID();
+                    // ===== CHỌN TRAINER =====
+                    SelectTrainerDialog trainerDialog =
+                            new SelectTrainerDialog(SwingUtilities.getWindowAncestor(this));
+                    trainerDialog.setVisible(true);
 
-                // 2.2 Chọn dịch vụ của PT đó
-                SelectPTServiceDialog serviceDialog =
-                        new SelectPTServiceDialog(
-                                SwingUtilities.getWindowAncestor(this),
-                                trainerID
-                        );
-                serviceDialog.setVisible(true);
+                    if (!trainerDialog.isSelected()) {
+                        ptServiceID = null;
+                        break; // bỏ PT luôn
+                    }
 
-                if (!serviceDialog.isSelected()) return;
-                ptServiceID = serviceDialog.getSelectedServiceID();
+                    int trainerID = trainerDialog.getSelectedTrainerID();
+
+                    // ===== CHỌN SERVICE =====
+                    SelectPTServiceDialog serviceDialog =
+                            new SelectPTServiceDialog(
+                                    SwingUtilities.getWindowAncestor(this),
+                                    trainerID
+                            );
+                    serviceDialog.setVisible(true);
+
+                    if (serviceDialog.isGoBack()) {
+                        continue; // quay lại chọn trainer
+                    }
+
+                    if (!serviceDialog.isSelected()) {
+                        ptServiceID = null;
+                    } else {
+                        ptServiceID = serviceDialog.getSelectedServiceID();
+                    }
+
+                    break;
+                }
             }
-
             /* ================= 3. XÁC NHẬN THANH TOÁN ================= */
 
             int confirmPay = JOptionPane.showConfirmDialog(
@@ -435,10 +460,18 @@ public class MemberUI extends JPanel {
     /* ================= HELPERS ================= */
 
     private JTextField field(boolean enable) {
+
         JTextField f = new JTextField();
+
         f.setEnabled(enable);
+
+        // 👉 QUAN TRỌNG
+        f.setPreferredSize(new Dimension(0, 34));
+        f.setMinimumSize(new Dimension(0, 34));
+
         return f;
     }
+
 
 
     private void addRow(JPanel p, GridBagConstraints g, int y,
@@ -447,20 +480,34 @@ public class MemberUI extends JPanel {
 
         g.gridy = y;
 
+        // ===== LABEL 1 =====
         g.gridx = 0;
+        g.weightx = 0;
+        g.fill = GridBagConstraints.NONE;
         p.add(new JLabel(l1), g);
 
-        g.gridx = 1; g.weightx = 1;
+        // ===== FIELD 1 =====
+        g.gridx = 1;
+        g.weightx = 1;  // 👉 CHO GIÃN FULL
+        g.fill = GridBagConstraints.HORIZONTAL;
         p.add(f1, g);
 
         if (l2 != null) {
-            g.gridx = 2; g.weightx = 0;
+
+            // ===== LABEL 2 =====
+            g.gridx = 2;
+            g.weightx = 0;
+            g.fill = GridBagConstraints.NONE;
             p.add(new JLabel(l2), g);
 
-            g.gridx = 3; g.weightx = 1;
+            // ===== FIELD 2 =====
+            g.gridx = 3;
+            g.weightx = 1;  // 👉 QUAN TRỌNG
+            g.fill = GridBagConstraints.HORIZONTAL;
             p.add(f2, g);
         }
     }
+
 
     private void styleTable(JTable table) {
 

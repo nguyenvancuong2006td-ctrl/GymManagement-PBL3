@@ -14,6 +14,7 @@ public class SelectPTServiceDialog extends JDialog {
 
     private JTable table;
     private int selectedServiceID = -1;
+    private boolean goBack = false;
 
     public SelectPTServiceDialog(Window owner, int trainerID) {
         super(owner, "Chọn dịch vụ PT", ModalityType.APPLICATION_MODAL);
@@ -69,9 +70,26 @@ public class SelectPTServiceDialog extends JDialog {
             dispose();
         });
 
+
+        JButton btnBack = new JButton("Quay lại");
+        btnBack.addActionListener(e -> {
+            goBack = true;
+            dispose();
+        });
+
         add(new JScrollPane(table), BorderLayout.CENTER);
-        add(btnSelect, BorderLayout.SOUTH);
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        btnPanel.add(btnBack);
+        btnPanel.add(btnSelect);
+
+        add(btnPanel, BorderLayout.SOUTH);
     }
+
+
+    public boolean isGoBack() {
+        return goBack;
+    }
+
 
     public boolean isSelected() {
         return selectedServiceID != -1;

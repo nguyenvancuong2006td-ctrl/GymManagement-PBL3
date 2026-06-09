@@ -4,7 +4,7 @@ public class BackupRestoreUtil {
 
     private static final String DB_NAME = "GymManagement";
     private static final String BACKUP_PATH =
-            "C:\\Program Files\\Microsoft SQL Server\\MSSQL16.SQLEXPRESS\\MSSQL\\Backup\\gym_backup.bak";
+            "C:\\Java-intellij IDE\\GymManagement\\backup\\gym_backup.bak";
 
     public static boolean backupDatabase() {
         try {

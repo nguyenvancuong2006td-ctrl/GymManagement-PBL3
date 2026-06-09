@@ -54,8 +54,20 @@ public class SelectTrainerDialog extends JDialog {
             dispose();
         });
 
+        JButton btnCancel = new JButton("Hủy");
+        btnCancel.addActionListener(e -> {
+            selectedTrainerID = -1; // không chọn
+            dispose();
+        });
+
+
         add(new JScrollPane(table), BorderLayout.CENTER);
-        add(btnSelect, BorderLayout.SOUTH);
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        btnPanel.add(btnCancel);
+        btnPanel.add(btnSelect);
+
+        add(btnPanel, BorderLayout.SOUTH);
+
     }
 
     public boolean isSelected() {

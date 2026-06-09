@@ -281,10 +281,79 @@ public class TrainerUI extends JPanel {
     }
 
     private void addTrainer() {
-        trainerBUS.add(getFormData());
-        loadData();
-        clearForm();
+
+        try {
+            validateForm();
+
+            trainerBUS.add(getFormData());
+
+            JOptionPane.showMessageDialog(this,
+                    "Thêm huấn luyện viên thành công!");
+
+            loadData();
+            clearForm();
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    e.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
     }
+
+    private void validateForm() throws Exception {
+
+        String name = txtName.getText().trim();
+        String phone = txtPhone.getText().trim();
+        String salaryStr = txtSalary.getText().trim();
+
+        // ===== CHECK RỖNG =====
+        if (name.isEmpty() || phone.isEmpty() || salaryStr.isEmpty()) {
+            throw new Exception("Vui lòng nhập đầy đủ thông tin");
+        }
+
+        // ===== CHECK PHONE =====
+        if (!phone.matches("\\d{9,11}")) {
+            throw new Exception("Số điện thoại không hợp lệ");
+        }
+
+        // ===== CHECK TRÙNG PHONE =====
+        if (!txtID.getText().isEmpty()) {
+
+            int currentId = Integer.parseInt(txtID.getText());
+
+            for (Trainer t : allTrainers) {
+                if (t.getPhoneNumber().equals(phone)
+                        && t.getTrainerID() != currentId) {
+
+                    throw new Exception("Số điện thoại đã tồn tại");
+                }
+            }
+
+        } else {
+
+            for (Trainer t : allTrainers) {
+                if (t.getPhoneNumber().equals(phone)) {
+                    throw new Exception("Số điện thoại đã tồn tại");
+                }
+            }
+        }
+
+        // ===== CHECK LƯƠNG =====
+        try {
+            double salary = Double.parseDouble(salaryStr);
+            if (salary < 0) {
+                throw new Exception("Lương phải >= 0");
+            }
+        } catch (NumberFormatException e) {
+            throw new Exception("Lương phải là số");
+        }
+    }
+
+
+
 
     private void updateTrainer() {
         trainerBUS.update(getFormData());
