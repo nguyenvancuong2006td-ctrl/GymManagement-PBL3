@@ -216,7 +216,9 @@ public class MemberUI extends JPanel {
         List<Member> rs = new ArrayList<>();
 
         for (Member m : allMembers) {
-            if (m.getFullName().toLowerCase().contains(key)) {
+            if (m.getFullName().toLowerCase().contains(key)
+                    || m.getPhoneNumber().contains(key)) {
+
                 rs.add(m);
             }
         }

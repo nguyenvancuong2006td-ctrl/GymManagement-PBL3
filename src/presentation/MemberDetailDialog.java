@@ -30,6 +30,8 @@ public class MemberDetailDialog extends JDialog {
     private final MemberPTDAO memberPTDAO = new MemberPTDAO();
     private final PTServiceDAO ptServiceDAO = new PTServiceDAO();
     private final InvoiceDAO invoiceDAO = new InvoiceDAO();
+    private final MembershipPackageDAO membershipPackageDAO = new MembershipPackageDAO();
+
 
     /* ================= STYLE ================= */
 
@@ -221,11 +223,23 @@ public class MemberDetailDialog extends JDialog {
         MemberPackage pkg = packageDAO.getActiveByMember(memberID);
 
         if (pkg == null) {
-            JLabel lbl = new JLabel("Hội viên chưa đăng ký gói tập", SwingConstants.CENTER);
-            lbl.setFont(new Font("Segoe UI", Font.ITALIC, 15));
-            root.add(lbl, BorderLayout.CENTER);
+
+            JPanel emptyCard = new JPanel(new BorderLayout());
+            emptyCard.setBackground(Color.WHITE);
+            emptyCard.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(220, 220, 220)),
+                    BorderFactory.createEmptyBorder(30, 30, 30, 30)
+            ));
+
+            JLabel text = new JLabel("Hội viên chưa đăng ký gói tập", SwingConstants.CENTER);
+            text.setFont(new Font("Segoe UI", Font.BOLD, 16));
+
+            emptyCard.add(text, BorderLayout.CENTER);
+
+            root.add(emptyCard, BorderLayout.CENTER);
             return root;
         }
+        MembershipPackage mp = membershipPackageDAO.findById(pkg.getPackageID());
 
         /* ================= HEADER ================= */
 
@@ -238,7 +252,7 @@ public class MemberDetailDialog extends JDialog {
         JPanel summaryGrid = new JPanel(new GridLayout(2, 2, 16, 16));
         summaryGrid.setOpaque(false);
 
-        summaryGrid.add(summaryCard("Mã gói", String.valueOf(pkg.getPackageID())));
+        summaryGrid.add(summaryCard("Tên gói", mp.getPackageName()));
         summaryGrid.add(summaryCard("Trạng thái", "ĐANG HOẠT ĐỘNG"));
         summaryGrid.add(summaryCard("Ngày bắt đầu", pkg.getStartDate().toString()));
         summaryGrid.add(summaryCard("Ngày hết hạn", pkg.getEndDate().toString()));
